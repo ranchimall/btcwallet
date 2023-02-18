@@ -734,10 +734,10 @@
                             getRef('loading_page').remove()
                         }
                     }, 500);
+                    document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[selectedCurrency])
+                    getRef('add_sender').click();
+                    getRef('add_receiver').click();
                 })
-            getRef('add_sender').click();
-            getRef('add_receiver').click();
-            document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[selectedCurrency])
 
         });
         function createRipple(event, target) {
