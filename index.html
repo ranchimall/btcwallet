@@ -126,7 +126,7 @@
                     <div class="margin-bottom-0-5">
                         <div class="flex align-center space-between margin-bottom-0-5">
                             <h3>Senders</h3>
-                            <button class="button button--small" id="check_balance">Check
+                            <button class="button button--small" id="check_balance" onclick="checkBalance()">Check
                                 Balance</button>
                         </div>
                         <div id="sender_container"></div>
@@ -713,7 +713,7 @@
             });
             getExchangeRate()
                 .catch(e => {
-                    console.error(e)
+                    // console.error(e)
                     getRef('currency_selector').classList.add('hidden')
                 }).finally(() => {
                     routeTo(window.location.hash)
@@ -1315,8 +1315,9 @@
             if (typeof amount === 'string') {
                 amount = parseFloat(amount)
             }
-            const result = parseFloat((amount * globalExchangeRate[getRef('currency_selector').value]).toFixed(8))
-            return result
+            if (globalExchangeRate[getRef('currency_selector').value])
+                return parseFloat((amount * globalExchangeRate[getRef('currency_selector').value]).toFixed(8))
+            else return amount
         }
         function roundUp(amount, precision = 2) {
             return parseFloat((Math.ceil(amount * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
@@ -1460,9 +1461,6 @@
                 e.target.closest('.card').remove()
             }
         })
-        getRef('check_balance').onclick = evt => {
-            checkBalance();
-        }
         async function checkBalance() {
             const addresses = [...getRef('sender_container').querySelectorAll('.sender-input')].filter(input => input.value.trim() !== '').map(input => input.value.trim())
             if (addresses.length === 0) {
@@ -1473,20 +1471,22 @@
             let totalBalance = 0;
             console.debug(addresses);
             let senderBalances = [...getRef('sender_container').querySelectorAll('.sender-balance')];
-            try {
-                senderBalances.forEach(el => el.innerHTML = '<sm-spinner></sm-spinner>');
-                await getExchangeRate();
-                const balances = await Promise.all(addresses.map((addr, index) => btcOperator.getBalance(addr)))
-                balances.forEach((result, index) => {
-                    senderBalances[index].textContent = formatAmount(getConvertedAmount(result));
-                    senderBalances[index].dataset.btcAmount = result;
-                    totalBalance += result;
+            senderBalances.forEach(el => el.innerHTML = '<sm-spinner></sm-spinner>');
+            Promise.all(addresses.map((addr, index) => btcOperator.getBalance(addr))).then(balances => {
+                balances.forEach((balance, index) => {
+                    senderBalances[index].textContent = formatAmount(getConvertedAmount(balance));
+                    senderBalances[index].dataset.btcAmount = balance;
+                    totalBalance += balance;
                 })
+                console.log(totalBalance)
                 getRef("total_balance").textContent = `${formatAmount(getConvertedAmount(totalBalance))}`;
                 getRef("total_balance").dataset.btcAmount = totalBalance;
-            } catch (e) {
-                notify(e, 'error');
-            }
+            }).catch(err => {
+                console.error(err);
+                notify('Error while fetching balance', 'error');
+                senderBalances.forEach(el => el.innerHTML = '');
+                getRef("total_balance").innerHTML = '';
+            })
         }
         getRef('add_receiver').onclick = evt => {
             let receiverCard = getRef('receiver_template').content.cloneNode(true)
