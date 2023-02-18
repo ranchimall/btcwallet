@@ -751,12 +751,14 @@ ol li::before {
   display: grid;
   text-align: center;
   align-items: center;
+  justify-items: center;
 }
 .multi-state-button > * {
   grid-area: 1/1/2/2;
 }
 .multi-state-button button {
   z-index: 1;
+  width: 100%;
 }
 
 .scrolling-wrapper {
@@ -1004,6 +1006,10 @@ table tr:nth-child(even) {
 #scroll_to_top {
   border-radius: 3rem;
   background-color: rgba(var(--foreground-color), 1);
+}
+
+#txid {
+  font-size: 0.9rem;
 }
 
 .user-action-result__icon {
