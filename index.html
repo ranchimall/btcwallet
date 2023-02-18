@@ -1140,7 +1140,6 @@
                     getRef('address_details').classList.remove('hidden')
                     getRef('transactions_list').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
                     getRef('address_balance').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
-                    await getExchangeRate();
                     btcOperator.getAddressData(address).then(result => {
                         getRef('address_balance').value = formatAmount(getConvertedAmount(result.balance));
                         getRef('address_balance').dataset.btcAmount = result.balance;
@@ -1174,7 +1173,6 @@
             async txDetails(txid) {
                 getRef('tx_details').classList.remove('hidden')
                 renderElem(getRef('tx_details'), html`<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>`);
-                await getExchangeRate();
                 if (txDetailsAbortController) {
                     txDetailsAbortController.abort()
                 }
@@ -1323,8 +1321,6 @@
             return parseFloat((Math.ceil(amount * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
         }
         getRef('currency_selector').addEventListener('change', async e => {
-            if (!globalExchangeRate.hasOwnProperty(e.target.value))
-                await getExchangeRate();
             localStorage.setItem('btc-wallet-currency', e.target.value);
             document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[e.target.value])
             document.querySelectorAll('.amount-shown').forEach(el => {
@@ -1544,7 +1540,7 @@
             const privKeys = [...getRef('sender_container').querySelectorAll('.priv-key-input')].map(input => input.value.trim());
             const receivers = [...getRef('receiver_container').querySelectorAll('.receiver-input')].map(input => input.value.trim());
             const amounts = [...getRef('receiver_container').querySelectorAll('.amount-input')].map(input => {
-                return parseFloat(input.value.trim()) / globalExchangeRate[getRef('currency_selector').value]
+                return parseFloat(input.value.trim()) / (globalExchangeRate[getRef('currency_selector').value] || 1)
             });
             console.debug(senders, receivers, amounts); //for automatic fee calc, set fee = null
             return [senders, privKeys, receivers, amounts]
@@ -1620,31 +1616,26 @@
 
         getRef('send_transaction').onclick = evt => {
             buttonLoader('send_transaction', true)
-            getExchangeRate().then(async exchangeRate => {
-                const [senders, privKeys, receivers, amounts] = getTransactionInputs();
-                let fee = null;
-                if (getRef('fees_selector').value === 'custom') {
-                    const feeInput = document.getElementById('send_fee').value.trim();
-                    if (!feeInput || isNaN(feeInput) || feeInput <= 0) {
-                        notify('Please enter a valid fee', 'error');
-                        buttonLoader('send_transaction', false)
-                        return;
-                    }
-                    fee = parseFloat((parseFloat(feeInput) / globalExchangeRate[getRef('currency_selector').value]).toFixed(8));
-                }
-                btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
-                    console.log(txid);
-                    getRef('txid').value = txid;
-                    openPopup('txid_popup', true);
-                    getRef('send_tx').reset()
-                }).catch(error => {
-                    console.error(error)
-                    notify(`Error sending transaction \n ${error}`, 'error');
-                }).finally(_ => {
+            const [senders, privKeys, receivers, amounts] = getTransactionInputs();
+            let fee = null;
+            if (getRef('fees_selector').value === 'custom') {
+                const feeInput = document.getElementById('send_fee').value.trim();
+                if (!feeInput || isNaN(feeInput) || feeInput <= 0) {
+                    notify('Please enter a valid fee', 'error');
                     buttonLoader('send_transaction', false)
-                })
-            }).catch(err => {
-                notify(err, 'error')
+                    return;
+                }
+                fee = parseFloat((parseFloat(feeInput) / (globalExchangeRate[getRef('currency_selector').value] || 1)).toFixed(8));
+            }
+            btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
+                console.log(txid);
+                getRef('txid').value = txid;
+                openPopup('txid_popup', true);
+                getRef('send_tx').reset()
+            }).catch(error => {
+                console.error(error)
+                notify(`Error sending transaction \n ${error}`, 'error');
+            }).finally(_ => {
                 buttonLoader('send_transaction', false)
             })
         }
