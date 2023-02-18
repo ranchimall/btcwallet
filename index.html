@@ -712,7 +712,12 @@
                 }
             });
             getExchangeRate()
+                .then(() => {
+                    selectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc'
+                    getRef('currency_selector').value = selectedCurrency
+                })
                 .catch(e => {
+                    selectedCurrency = 'btc'
                     // console.error(e)
                     getRef('currency_selector').classList.add('hidden')
                 }).finally(() => {
@@ -730,8 +735,6 @@
                         }
                     }, 500);
                 })
-            selectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc'
-            getRef('currency_selector').value = selectedCurrency
             getRef('add_sender').click();
             getRef('add_receiver').click();
             document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[selectedCurrency])
@@ -1631,7 +1634,7 @@
                 console.log(txid);
                 getRef('txid').value = txid;
                 openPopup('txid_popup', true);
-                getRef('send_tx').reset()
+                getRef('send_tx').reset();
             }).catch(error => {
                 console.error(error)
                 notify(`Error sending transaction \n ${error}`, 'error');
