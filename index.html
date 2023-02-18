@@ -712,16 +712,15 @@
                 }
             });
             getExchangeRate()
-                .then(() => {
+                .catch(e => {
+                    console.error(e)
+                    getRef('currency_selector').classList.add('hidden')
+                }).finally(() => {
                     routeTo(window.location.hash)
                     setTimeout(() => {
                         getRef('loading_page').animate([
-                            {
-                                transform: 'translateY(0)',
-                            },
-                            {
-                                transform: 'translateY(-100%)',
-                            }
+                            { transform: 'translateY(0)', },
+                            { transform: 'translateY(-100%)', }
                         ], {
                             duration: 300,
                             fill: 'forwards',
@@ -730,10 +729,6 @@
                             getRef('loading_page').remove()
                         }
                     }, 500);
-                })
-                .catch(e => {
-                    console.error(e)
-                    notify('Error fetching exchange rate', 'error')
                 })
             selectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc'
             getRef('currency_selector').value = selectedCurrency
@@ -1311,8 +1306,8 @@
                         })
                         globalExchangeRate.btc = 1
                         resolve(globalExchangeRate)
-                    }).catch(err => console.log(err))
-                }).catch(err => console.log(err))
+                    }).catch(err => reject(err))
+                }).catch(err => reject(err))
             })
         }
         function getConvertedAmount(amount) {
@@ -1380,8 +1375,6 @@
         });
         function retrieveBtcAddr() {
             let wif = getRef('retrieve_btc_addr_field').value.trim();
-            // addressForm['legacy'].value = btcOperator.address(wif);
-            // addressForm['segwit'].value = btcOperator.segwitAddress(wif);
             getRef('recovered_btc_addr_wrapper').classList.remove('hidden')
             getRef('recovered_btc_addr').value = btcOperator.bech32Address(wif);
         }
@@ -1535,6 +1528,9 @@
                                 <p style="opacity: 0.8;">*Exact fee will be calculated after you fill all the required fields</p>
                             </div>
                             `)
+                        }).catch(e => {
+                            getRef('fees_selector').children[1].click();
+                            getRef('fees_selector').classList.add('hidden')
                         })
                     }
                     getRef('fees_section').classList.remove('hidden')
@@ -1555,14 +1551,20 @@
         }
         function calculateApproxFee() {
             return new Promise((resolve, reject) => {
-                fetch('https://bitcoiner.live/api/fees/estimates/latest').then(res => res.json()).then(data => {
-                    const satPerByte = data.estimates['60'].sat_per_vbyte;
-                    const legacyBytes = 200;
-                    const segwitBytes = 77;
-                    resolve((legacyBytes * satPerByte + (0.25 * satPerByte) * segwitBytes) / Math.pow(10, 8));
-                }).catch(e => {
-                    reject(e)
-                })
+                fetch('https://bitcoiner.live/api/fees/estimates/latest')
+                    .then(res => {
+                        res.json()
+                            .then(data => {
+                                const satPerByte = data.estimates['60'].sat_per_vbyte;
+                                const legacyBytes = 200;
+                                const segwitBytes = 77;
+                                resolve((legacyBytes * satPerByte + (0.25 * satPerByte) * segwitBytes) / Math.pow(10, 8));
+                            }).catch(e => {
+                                reject(e)
+                            })
+                    }).catch(e => {
+                        reject(e)
+                    })
             })
         }
         function calculateExactFee() {
