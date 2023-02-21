@@ -807,6 +807,9 @@
                             getRef('search_query_input').value = params.query;
                         render.queryResult(params.query)
                     }
+                    setTimeout(() => {
+                        getRef('search_query_input').focusIn()
+                    }, 200);
                     break;
             }
             const animOptions = {
@@ -1147,6 +1150,7 @@
                         getRef('address_balance').value = formatAmount(getConvertedAmount(result.balance));
                         getRef('address_balance').dataset.btcAmount = result.balance;
                         getRef('address_balance').parentElement.classList.remove('hidden')
+                        getRef('filter_selector').classList.remove('hidden')
                         // render transactions
                         if (result.txs.length) {
                             let allTransactions = result.txs;
@@ -1164,7 +1168,11 @@
                         } else {
                             getRef('transactions_list').textContent = 'No transactions found';
                         }
-                    }).catch(error => console.error(error)).finally(_ => getRef('check_address_button').disabled = false)
+                    }).catch(error => {
+                        console.error(error)
+                        getRef('filter_selector').classList.add('hidden')
+                        getRef('transactions_list').textContent = `Looks like we couldn't fetch your transactions at this time. Please try again later.`;
+                    }).finally(_ => getRef('check_address_button').disabled = false)
                 } catch (err) {
                     notify(err, 'error');
                 }
@@ -1601,7 +1609,6 @@
         }
 
         getRef('send_tx').addEventListener('valid', debounce(e => {
-            console.debug('valid', e.target.isFormValid)
             if (getRef('fees_selector').value === 'suggested') {
                 calculateExactFee()
             } else {
