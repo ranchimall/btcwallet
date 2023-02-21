@@ -1171,7 +1171,7 @@
                     }).catch(error => {
                         console.error(error)
                         getRef('filter_selector').classList.add('hidden')
-                        getRef('transactions_list').textContent = `Looks like we couldn't fetch your transactions at this time. Please try again later.`;
+                        getRef('transactions_list').textContent = `Looks like we couldn't fetch transactions at this time. Please try again later.`;
                     }).finally(_ => getRef('check_address_button').disabled = false)
                 } catch (err) {
                     notify(err, 'error');
