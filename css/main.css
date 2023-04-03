@@ -867,7 +867,7 @@ ol li::before {
   grid-template-areas: "icon time amount" "icon receiver receiver" "icon txid txid";
 }
 .transaction:not(:last-of-type) {
-  padding-bottom: 1rem;
+  padding-bottom: 2rem;
 }
 .transaction__amount {
   white-space: nowrap;

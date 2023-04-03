@@ -804,7 +804,7 @@ ol {
   align-items: center;
   grid-template-areas: "icon time amount" "icon receiver receiver" "icon txid txid";
   &:not(:last-of-type) {
-    padding-bottom: 1rem;
+    padding-bottom: 2rem;
   }
   &__amount {
     white-space: nowrap;
