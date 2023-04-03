@@ -1140,7 +1140,7 @@
                         <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(getConvertedAmount(amount))}</div>
                         <div class="transaction__receiver">
                             ${transactionReceiver}
-                            ${transactingAddresses.length > 2 ? html`, <button onclick=${showAllAddresses} class="button button--small show-more" title="See all addresses"> +${transactingAddresses.length - 2} more</button>` : ''}
+                            ${transactingAddresses.length > 2 ? html`<button onclick=${showAllAddresses} class="button button--small show-more" title="See all addresses">... +${transactingAddresses.length - 2} more</button>` : ''}
                         </div>
                         <div class="transaction__id wrap-around">TXID: <a href="${`#/check_details?query=${txid}`}">${txid}</a></div>
                         ${!block ? html`<p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>` : ''}
