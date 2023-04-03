@@ -316,8 +316,6 @@ ol li::before {
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
-  -webkit-hyphens: auto;
-          hyphens: auto;
 }
 
 .full-bleed {

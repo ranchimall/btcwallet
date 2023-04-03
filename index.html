@@ -1115,12 +1115,15 @@
                 let { address, amount, time, txid, sender, receiver, type, block } = transactionDetails;
                 let transactionReceiver
                 let icon
+                const transactingAddresses = (receiver || sender || [])
+                const transactingAddressesLinks = transactingAddresses
+                    .slice(0, 2).map(address => html`<a href="${`#/check_details?query=${address}`}" class="tx-participant wrap-around">${address}</a>`)
                 // block = null
                 if (type === 'out') {
-                    transactionReceiver = html`Sent to ${receiver.map(address => html`<a href="${`#/check_details?query=${address}`}" class="tx-participant wrap-around">${address}</a>`)}`;
+                    transactionReceiver = html`Sent to ${transactingAddressesLinks}`;
                     icon = svg`<svg class="icon sent" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>`;
                 } else if (type === 'in') {
-                    transactionReceiver = html`Received from ${sender.map(address => html`<a href="${`#/check_details?query=${address}`}" class="tx-participant wrap-around">${address}</a>`)}`;
+                    transactionReceiver = html`Received from ${transactingAddressesLinks}`;
                     icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
                 } else if (type === 'self') {
                     transactionReceiver = `Sent to self`;
@@ -1131,11 +1134,14 @@
                 }
                 const className = `transaction grid ${type} ${block === null ? 'unconfirmed-tx' : ''}`
                 return html.node`
-                    <li class="${className}" data-txid="${txid}">
+                    <li class="${className}" data-txid="${txid}" data-transacting-addresses=${transactingAddresses.slice(2)}>
                         <div class="transaction__icon">${icon}</div>
                         <time class="transaction__time">${getFormattedTime(time)}</time>
                         <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(getConvertedAmount(amount))}</div>
-                        <div class="transaction__receiver">${transactionReceiver}</div>
+                        <div class="transaction__receiver">
+                            ${transactionReceiver}
+                            ${transactingAddresses.length > 2 ? html`, <button onclick=${showAllAddresses} class="button button--small show-more" title="See all addresses"> +${transactingAddresses.length - 2} more</button>` : ''}
+                        </div>
                         <div class="transaction__id wrap-around">TXID: <a href="${`#/check_details?query=${txid}`}">${txid}</a></div>
                         ${!block ? html`<p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>` : ''}
                     </li>
@@ -1672,6 +1678,13 @@
                 location.hash = `#/check_details?query=${query}`;
             }
         })
+
+        function showAllAddresses(e) {
+            const addresses = e.target.closest('li').dataset.transactingAddresses
+            const addressesList = addresses.split(',').map(address => html.node`<a href="${`#/check_details?query=${address}`}" class="tx-participant wrap-around">${address}</a>`)
+            e.target.closest('button').before(...addressesList)
+            e.target.closest('button').remove()
+        }
 
     </script>
 </body>
