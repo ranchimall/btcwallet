@@ -1177,7 +1177,7 @@
                     }).catch(error => {
                         console.error(error)
                         getRef('filter_selector').classList.add('hidden')
-                        getRef('transactions_list').textContent = `Looks like we couldn't fetch transactions at this time. Please try again later.`;
+                        getRef('transactions_list').textContent = `The data service is temporarily unavailable due to over-usage. Please try again in an hour.`;
                     }).finally(_ => getRef('check_address_button').disabled = false)
                 } catch (err) {
                     notify(err, 'error');
