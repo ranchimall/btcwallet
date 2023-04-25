@@ -1584,7 +1584,7 @@
             return new Promise((resolve, reject) => {
                 renderElem(getRef('fees_wrapper'), html`<sm-spinner></sm-spinner>`)
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
-                btcOperator.createSignedTx(senders, privKeys, receivers, amounts).then(({ fee }) => {
+                btcOperator.createTx(senders, receivers, amounts).then(({ fee }) => {
                     renderElem(getRef('fees_wrapper'), html` <b id="recommended_fee" class="amount-shown" data-btc-amount=${fee}>${formatAmount(getConvertedAmount(fee))}</b> `)
                     getRef('send_transaction').disabled = false;
                     getRef('fees_section').classList.remove('hidden')
@@ -1627,6 +1627,7 @@
         getRef('send_tx').addEventListener('invalid', e => {
             renderFeesUI()
             getRef('send_transaction').disabled = true;
+            console.log(e)
         })
 
 
