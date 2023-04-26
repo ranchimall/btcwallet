@@ -12,10 +12,11 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Calistoga&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
         rel="stylesheet">
-    <script src="components.js" defer></script>
+    <script src="scripts/components.js" defer></script>
     <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
-    <script type="text/javascript" src="lib.js"></script>
-    <script type="text/javascript" src="btcOperator.js"></script>
+    <script type="text/javascript" src="scripts/lib.js"></script>
+    <script src="scripts/floCrypto.js"></script>
+    <script type="text/javascript" src="scripts/btcOperator.js"></script>
 </head>
 
 <body class="hidden">
@@ -1417,8 +1418,12 @@
             } else if (type === 'bech32') {
                 getRef('convert_flo_input').value = btcOperator.convert.bech2legacy(btc_bech, 0x23);
             } else {
-                getRef('convert_flo_input').value = '';
-                notify(`Multisig address can't be converted to FLO`, 'error');
+                try {
+                    const floMultisig = floCrypto.toMultisigFloID(btc_bech)
+                    getRef('convert_flo_input').value = floMultisig;
+                } catch (e) {
+                    notify(`Multisig address can't be converted to FLO`, 'error');
+                }
             }
         }
         getRef('convert_to_btc').onclick = evt => {
@@ -1627,7 +1632,6 @@
         getRef('send_tx').addEventListener('invalid', e => {
             renderFeesUI()
             getRef('send_transaction').disabled = true;
-            console.log(e)
         })
 
 

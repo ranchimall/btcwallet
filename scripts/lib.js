@@ -1,9 +1,27 @@
-(function (GLOBAL) { //lib v1.3.2 (sub-set)
+(function (GLOBAL) { //lib v1.4.2b
     'use strict';
     /* Utility Libraries required for Standard operations
      * All credits for these codes belong to their respective creators, moderators and owners.
      * For more info (including license and terms of use), please visit respective source.
      */
+    GLOBAL.cryptocoin = (typeof floGlobals === 'undefined' ? null : floGlobals.blockchain) || 'FLO';
+
+    const getRandomBytes = (function () {
+        if (typeof require === 'function') {
+            const crypto = require('crypto');
+            return function (buf) {
+                var bytes = crypto.randomBytes(buf.length);
+                buf.set(bytes);
+                return buf;
+            }
+        } else if (GLOBAL.crypto && GLOBAL.crypto.getRandomValues) {
+            return function (buf) {
+                return GLOBAL.crypto.getRandomValues(buf);
+            }
+        } else
+            throw Error('Unable to define getRandomBytes');
+    })();
+
 
     GLOBAL.securedMathRandom = (function () {
         if (typeof require === 'function') {
@@ -413,6 +431,200 @@
                 return g && g.asBytes ? c : g && g.asString ? a.bytesToString(c) : k.bytesToHex(c)
             }
         })();
+    })();
+
+    //SecureRandom.js
+    (function () {
+
+
+        /*!
+         * Random number generator with ArcFour PRNG
+         *
+         * NOTE: For best results, put code like
+         * <body onclick='SecureRandom.seedTime();' onkeypress='SecureRandom.seedTime();'>
+         * in your main HTML document.
+         *
+         * Copyright Tom Wu, bitaddress.org  BSD License.
+         * http://www-cs-students.stanford.edu/~tjw/jsbn/LICENSE
+         */
+
+        // Constructor function of Global SecureRandom object
+        var sr = GLOBAL.SecureRandom = function () { };
+
+        // Properties
+        sr.state;
+        sr.pool;
+        sr.pptr;
+        sr.poolCopyOnInit;
+
+        // Pool size must be a multiple of 4 and greater than 32.
+        // An array of bytes the size of the pool will be passed to init()
+        sr.poolSize = 256;
+
+        // --- object methods ---
+
+        // public method
+        // ba: byte array
+        sr.prototype.nextBytes = function (ba) {
+            var i;
+            if (getRandomBytes && GLOBAL.Uint8Array) {
+                try {
+                    var rvBytes = new Uint8Array(ba.length);
+                    getRandomBytes(rvBytes);
+                    for (i = 0; i < ba.length; ++i)
+                        ba[i] = sr.getByte() ^ rvBytes[i];
+                    return;
+                } catch (e) {
+                    alert(e);
+                }
+            }
+            for (i = 0; i < ba.length; ++i) ba[i] = sr.getByte();
+        };
+
+
+        // --- static methods ---
+
+        // Mix in the current time (w/milliseconds) into the pool
+        // NOTE: this method should be called from body click/keypress event handlers to increase entropy
+        sr.seedTime = function () {
+            sr.seedInt(new Date().getTime());
+        }
+
+        sr.getByte = function () {
+            if (sr.state == null) {
+                sr.seedTime();
+                sr.state = sr.ArcFour(); // Plug in your RNG constructor here
+                sr.state.init(sr.pool);
+                sr.poolCopyOnInit = [];
+                for (sr.pptr = 0; sr.pptr < sr.pool.length; ++sr.pptr)
+                    sr.poolCopyOnInit[sr.pptr] = sr.pool[sr.pptr];
+                sr.pptr = 0;
+            }
+            // TODO: allow reseeding after first request
+            return sr.state.next();
+        }
+
+        // Mix in a 32-bit integer into the pool
+        sr.seedInt = function (x) {
+            sr.seedInt8(x);
+            sr.seedInt8((x >> 8));
+            sr.seedInt8((x >> 16));
+            sr.seedInt8((x >> 24));
+        }
+
+        // Mix in a 16-bit integer into the pool
+        sr.seedInt16 = function (x) {
+            sr.seedInt8(x);
+            sr.seedInt8((x >> 8));
+        }
+
+        // Mix in a 8-bit integer into the pool
+        sr.seedInt8 = function (x) {
+            sr.pool[sr.pptr++] ^= x & 255;
+            if (sr.pptr >= sr.poolSize) sr.pptr -= sr.poolSize;
+        }
+
+        // Arcfour is a PRNG
+        sr.ArcFour = function () {
+            function Arcfour() {
+                this.i = 0;
+                this.j = 0;
+                this.S = new Array();
+            }
+
+            // Initialize arcfour context from key, an array of ints, each from [0..255]
+            function ARC4init(key) {
+                var i, j, t;
+                for (i = 0; i < 256; ++i)
+                    this.S[i] = i;
+                j = 0;
+                for (i = 0; i < 256; ++i) {
+                    j = (j + this.S[i] + key[i % key.length]) & 255;
+                    t = this.S[i];
+                    this.S[i] = this.S[j];
+                    this.S[j] = t;
+                }
+                this.i = 0;
+                this.j = 0;
+            }
+
+            function ARC4next() {
+                var t;
+                this.i = (this.i + 1) & 255;
+                this.j = (this.j + this.S[this.i]) & 255;
+                t = this.S[this.i];
+                this.S[this.i] = this.S[this.j];
+                this.S[this.j] = t;
+                return this.S[(t + this.S[this.i]) & 255];
+            }
+
+            Arcfour.prototype.init = ARC4init;
+            Arcfour.prototype.next = ARC4next;
+
+            return new Arcfour();
+        };
+
+
+        // Initialize the pool with junk if needed.
+        if (sr.pool == null) {
+            sr.pool = new Array();
+            sr.pptr = 0;
+            var t;
+            if (getRandomBytes && GLOBAL.Uint8Array) {
+                try {
+                    // Use webcrypto if available
+                    var ua = new Uint8Array(sr.poolSize);
+                    getRandomBytes(ua);
+                    for (t = 0; t < sr.poolSize; ++t)
+                        sr.pool[sr.pptr++] = ua[t];
+                } catch (e) {
+                    alert(e);
+                }
+            }
+            while (sr.pptr < sr.poolSize) { // extract some randomness from securedMathRandom()
+                t = Math.floor(65536 * securedMathRandom());
+                sr.pool[sr.pptr++] = t >>> 8;
+                sr.pool[sr.pptr++] = t & 255;
+            }
+            sr.pptr = Math.floor(sr.poolSize * securedMathRandom());
+            sr.seedTime();
+            // entropy
+            var entropyStr = "";
+            // screen size and color depth: ~4.8 to ~5.4 bits
+            entropyStr += (GLOBAL.screen.height * GLOBAL.screen.width * GLOBAL.screen.colorDepth);
+            entropyStr += (GLOBAL.screen.availHeight * GLOBAL.screen.availWidth * GLOBAL.screen.pixelDepth);
+            // time zone offset: ~4 bits
+            var dateObj = new Date();
+            var timeZoneOffset = dateObj.getTimezoneOffset();
+            entropyStr += timeZoneOffset;
+            // user agent: ~8.3 to ~11.6 bits
+            entropyStr += navigator.userAgent;
+            // browser plugin details: ~16.2 to ~21.8 bits
+            var pluginsStr = "";
+            for (var i = 0; i < navigator.plugins.length; i++) {
+                pluginsStr += navigator.plugins[i].name + " " + navigator.plugins[i].filename + " " + navigator.plugins[i].description + " " + navigator.plugins[i].version + ", ";
+            }
+            var mimeTypesStr = "";
+            for (var i = 0; i < navigator.mimeTypes.length; i++) {
+                mimeTypesStr += navigator.mimeTypes[i].description + " " + navigator.mimeTypes[i].type + " " + navigator.mimeTypes[i].suffixes + ", ";
+            }
+            entropyStr += pluginsStr + mimeTypesStr;
+            // cookies and storage: 1 bit
+            entropyStr += navigator.cookieEnabled + typeof (sessionStorage) + typeof (localStorage);
+            // language: ~7 bit
+            entropyStr += navigator.language;
+            // history: ~2 bit
+            entropyStr += GLOBAL.history.length;
+            // location
+            entropyStr += GLOBAL.location;
+
+            var entropyBytes = Crypto.SHA256(entropyStr, {
+                asBytes: true
+            });
+            for (var i = 0; i < entropyBytes.length; i++) {
+                sr.seedInt8(entropyBytes[i]);
+            }
+        }
     })();
 
     //ripemd160.js
@@ -4132,6 +4344,2009 @@
         }
     })();
 
+    //bitTrx.js
+    (function () {
+
+        var bitjs = GLOBAL.bitjs = function () { };
+
+        /* public vars */
+        bitjs.pub = 0x23; // flochange - changed the prefix to FLO Mainnet PublicKey Prefix 0x23
+        bitjs.priv = 0xa3; //flochange - changed the prefix to FLO Mainnet Private key prefix 0xa3
+        bitjs.multisig = 0x5e; //flochange - prefix for FLO Mainnet Multisig 0x5e
+        bitjs.compressed = false;
+
+        if (GLOBAL.cryptocoin == 'FLO_TEST') {
+            bitjs.pub = 0x73; // flochange - changed the prefix to FLO TestNet PublicKey Prefix 0x73
+            bitjs.priv = 0xa3; //flochange - changed the prefix to FLO TestNet Private key prefix 0xa3
+            bitjs.multisig = 0xc6; //flochange - prefix for FLO TestNet Multisig 0xc6
+        }
+
+        /* provide a privkey and return an WIF  */
+        bitjs.privkey2wif = function (h) {
+            var r = Crypto.util.hexToBytes(h);
+
+            if (bitjs.compressed == true) {
+                r.push(0x01);
+            }
+
+            r.unshift(bitjs.priv);
+            var hash = Crypto.SHA256(Crypto.SHA256(r, {
+                asBytes: true
+            }), {
+                asBytes: true
+            });
+            var checksum = hash.slice(0, 4);
+
+            return B58.encode(r.concat(checksum));
+        }
+
+        /* convert a wif key back to a private key */
+        bitjs.wif2privkey = function (wif) {
+            var compressed = false;
+            var decode = B58.decode(wif);
+            var key = decode.slice(0, decode.length - 4);
+            key = key.slice(1, key.length);
+            if (key.length >= 33 && key[key.length - 1] == 0x01) {
+                key = key.slice(0, key.length - 1);
+                compressed = true;
+            }
+            return {
+                'privkey': Crypto.util.bytesToHex(key),
+                'compressed': compressed
+            };
+        }
+
+        /* convert a wif to a pubkey */
+        bitjs.wif2pubkey = function (wif) {
+            var compressed = bitjs.compressed;
+            var r = bitjs.wif2privkey(wif);
+            bitjs.compressed = r['compressed'];
+            var pubkey = bitjs.newPubkey(r['privkey']);
+            bitjs.compressed = compressed;
+            return {
+                'pubkey': pubkey,
+                'compressed': r['compressed']
+            };
+        }
+
+        /* convert a wif to a address */
+        bitjs.wif2address = function (wif) {
+            var r = bitjs.wif2pubkey(wif);
+            return {
+                'address': bitjs.pubkey2address(r['pubkey']),
+                'compressed': r['compressed']
+            };
+        }
+
+        /* generate a public key from a private key */
+        bitjs.newPubkey = function (hash) {
+            var privateKeyBigInt = BigInteger.fromByteArrayUnsigned(Crypto.util.hexToBytes(hash));
+            var curve = EllipticCurve.getSECCurveByName("secp256k1");
+
+            var curvePt = curve.getG().multiply(privateKeyBigInt);
+            var x = curvePt.getX().toBigInteger();
+            var y = curvePt.getY().toBigInteger();
+
+            var publicKeyBytes = EllipticCurve.integerToBytes(x, 32);
+            publicKeyBytes = publicKeyBytes.concat(EllipticCurve.integerToBytes(y, 32));
+            publicKeyBytes.unshift(0x04);
+
+            if (bitjs.compressed == true) {
+                var publicKeyBytesCompressed = EllipticCurve.integerToBytes(x, 32)
+                if (y.isEven()) {
+                    publicKeyBytesCompressed.unshift(0x02)
+                } else {
+                    publicKeyBytesCompressed.unshift(0x03)
+                }
+                return Crypto.util.bytesToHex(publicKeyBytesCompressed);
+            } else {
+                return Crypto.util.bytesToHex(publicKeyBytes);
+            }
+        }
+
+        /* provide a public key and return address */
+        bitjs.pubkey2address = function (h, byte) {
+            var r = ripemd160(Crypto.SHA256(Crypto.util.hexToBytes(h), {
+                asBytes: true
+            }));
+            r.unshift(byte || bitjs.pub);
+            var hash = Crypto.SHA256(Crypto.SHA256(r, {
+                asBytes: true
+            }), {
+                asBytes: true
+            });
+            var checksum = hash.slice(0, 4);
+            return B58.encode(r.concat(checksum));
+        }
+
+        /* generate a multisig address from pubkeys and required signatures */
+        bitjs.pubkeys2multisig = function (pubkeys, required) {
+            var s = [];
+            s.push(80 + required); //OP_1
+            for (var i = 0; i < pubkeys.length; ++i) {
+                let bytes = Crypto.util.hexToBytes(pubkeys[i]);
+                s.push(bytes.length);
+                s = s.concat(bytes);
+            }
+            s.push(80 + pubkeys.length); //OP_1 
+            s.push(174); //OP_CHECKMULTISIG
+
+            if (s.length > 520) { // too large
+                throw Error(`redeemScript size(=${s.length}) too large`)
+            }
+
+            var x = ripemd160(Crypto.SHA256(s, {
+                asBytes: true
+            }), {
+                asBytes: true
+            });
+            x.unshift(bitjs.multisig);
+            var r = x;
+            r = Crypto.SHA256(Crypto.SHA256(r, {
+                asBytes: true
+            }), {
+                asBytes: true
+            });
+            var checksum = r.slice(0, 4);
+            var redeemScript = Crypto.util.bytesToHex(s);
+            var address = B58.encode(x.concat(checksum));
+
+            return {
+                'address': address,
+                'redeemScript': redeemScript,
+                'size': s.length
+            };
+        }
+
+        bitjs.transaction = function (tx_data = undefined) {
+            var btrx = {};
+            btrx.version = 2; //flochange look at this version
+            btrx.inputs = [];
+            btrx.outputs = [];
+            btrx.locktime = 0;
+            btrx.floData = ""; //flochange .. look at this
+
+
+            btrx.addinput = function (txid, index, scriptPubKey, sequence) {
+                var o = {};
+                o.outpoint = {
+                    'hash': txid,
+                    'index': index
+                };
+                o.script = Crypto.util.hexToBytes(scriptPubKey); //push previous output pubkey script
+                o.sequence = sequence || ((btrx.locktime == 0) ? 4294967295 : 0);
+                return this.inputs.push(o);
+            }
+
+            btrx.addoutput = function (address, value) {
+                var o = {};
+                var buf = [];
+                var addr = this.addressDecode(address);
+                o.value = new BigInteger('' + Math.round((value * 1) * 1e8), 10);
+
+                if (addr.version === bitjs.pub) { // regular address
+                    buf.push(118); //OP_DUP
+                    buf.push(169); //OP_HASH160
+                    buf = this.writeBytesToScriptBuffer(buf, addr.bytes);// address in bytes
+                    buf.push(136); //OP_EQUALVERIFY
+                    buf.push(172); //OP_CHECKSIG
+                } else if (addr.version === bitjs.multisig) { // multisig address
+                    buf.push(169); //OP_HASH160
+                    buf = this.writeBytesToScriptBuffer(buf, addr.bytes);// address in bytes
+                    buf.push(135); //OP_EQUAL
+                }
+
+                o.script = buf;
+                return this.outputs.push(o);
+            }
+
+            // flochange - Added fn to assign flodata to tx
+            btrx.addflodata = function (data) {
+                //checks for valid flo-data string
+                if (typeof data !== "string")
+                    throw Error("floData should be String");
+                if (data.length > 1040)
+                    throw Error("floData Character Limit Exceeded");
+                if (bitjs.strToBytes(data).some(c => c < 32 || c > 127))
+                    throw Error("floData contains Invalid characters (only ASCII characters allowed");
+
+                this.floData = data;
+                return this.floData;
+            }
+
+
+            // Only standard addresses (standard multisig supported)
+            btrx.addressDecode = function (address) {
+                var bytes = B58.decode(address);
+                var front = bytes.slice(0, bytes.length - 4);
+                var back = bytes.slice(bytes.length - 4);
+                var checksum = Crypto.SHA256(Crypto.SHA256(front, {
+                    asBytes: true
+                }), {
+                    asBytes: true
+                }).slice(0, 4);
+                if (checksum + "" == back + "") {
+                    return {
+                        version: front[0],
+                        bytes: front.slice(1)
+                    };
+                }
+            }
+
+            /* generate the transaction hash to sign from a transaction input */
+            btrx.transactionHash = function (index, sigHashType) {
+
+                var clone = bitjs.clone(this);
+                var shType = sigHashType || 1;
+
+                /* black out all other ins, except this one */
+                for (var i = 0; i < clone.inputs.length; i++) {
+                    if (index != i) {
+                        clone.inputs[i].script = [];
+                    }
+                }
+
+
+                if ((clone.inputs) && clone.inputs[index]) {
+
+                    /* SIGHASH : For more info on sig hashs see https://en.bitcoin.it/wiki/OP_CHECKSIG
+                        and https://bitcoin.org/en/developer-guide#signature-hash-type */
+
+                    if (shType == 1) {
+                        //SIGHASH_ALL 0x01
+
+                    } else if (shType == 2) {
+                        //SIGHASH_NONE 0x02
+                        clone.outputs = [];
+                        for (var i = 0; i < clone.inputs.length; i++) {
+                            if (index != i) {
+                                clone.inputs[i].sequence = 0;
+                            }
+                        }
+
+                    } else if (shType == 3) {
+
+                        //SIGHASH_SINGLE 0x03
+                        clone.outputs.length = index + 1;
+
+                        for (var i = 0; i < index; i++) {
+                            clone.outputs[i].value = -1;
+                            clone.outputs[i].script = [];
+                        }
+
+                        for (var i = 0; i < clone.inputs.length; i++) {
+                            if (index != i) {
+                                clone.inputs[i].sequence = 0;
+                            }
+                        }
+
+                    } else if (shType >= 128) {
+                        //SIGHASH_ANYONECANPAY 0x80
+                        clone.inputs = [clone.inputs[index]];
+
+                        if (shType == 129) {
+                            // SIGHASH_ALL + SIGHASH_ANYONECANPAY
+
+                        } else if (shType == 130) {
+                            // SIGHASH_NONE + SIGHASH_ANYONECANPAY
+                            clone.outputs = [];
+
+                        } else if (shType == 131) {
+                            // SIGHASH_SINGLE + SIGHASH_ANYONECANPAY
+                            clone.outputs.length = index + 1;
+                            for (var i = 0; i < index; i++) {
+                                clone.outputs[i].value = -1;
+                                clone.outputs[i].script = [];
+                            }
+                        }
+                    }
+
+                    var buffer = Crypto.util.hexToBytes(clone.serialize());
+                    buffer = buffer.concat(bitjs.numToBytes(parseInt(shType), 4));
+                    var hash = Crypto.SHA256(buffer, {
+                        asBytes: true
+                    });
+                    var r = Crypto.util.bytesToHex(Crypto.SHA256(hash, {
+                        asBytes: true
+                    }));
+                    return r;
+                } else {
+                    return false;
+                }
+            }
+
+            /* generate a signature from a transaction hash */
+            btrx.transactionSig = function (index, wif, sigHashType, txhash) {
+
+                function serializeSig(r, s) {
+                    var rBa = r.toByteArraySigned();
+                    var sBa = s.toByteArraySigned();
+
+                    var sequence = [];
+                    sequence.push(0x02); // INTEGER
+                    sequence.push(rBa.length);
+                    sequence = sequence.concat(rBa);
+
+                    sequence.push(0x02); // INTEGER
+                    sequence.push(sBa.length);
+                    sequence = sequence.concat(sBa);
+
+                    sequence.unshift(sequence.length);
+                    sequence.unshift(0x30); // SEQUENCE
+
+                    return sequence;
+                }
+
+                var shType = sigHashType || 1;
+                var hash = txhash || Crypto.util.hexToBytes(this.transactionHash(index, shType));
+
+                if (hash) {
+                    var curve = EllipticCurve.getSECCurveByName("secp256k1");
+                    var key = bitjs.wif2privkey(wif);
+                    var priv = BigInteger.fromByteArrayUnsigned(Crypto.util.hexToBytes(key['privkey']));
+                    var n = curve.getN();
+                    var e = BigInteger.fromByteArrayUnsigned(hash);
+                    var badrs = 0
+                    do {
+                        var k = this.deterministicK(wif, hash, badrs);
+                        var G = curve.getG();
+                        var Q = G.multiply(k);
+                        var r = Q.getX().toBigInteger().mod(n);
+                        var s = k.modInverse(n).multiply(e.add(priv.multiply(r))).mod(n);
+                        badrs++
+                    } while (r.compareTo(BigInteger.ZERO) <= 0 || s.compareTo(BigInteger.ZERO) <= 0);
+
+                    // Force lower s values per BIP62
+                    var halfn = n.shiftRight(1);
+                    if (s.compareTo(halfn) > 0) {
+                        s = n.subtract(s);
+                    };
+
+                    var sig = serializeSig(r, s);
+                    sig.push(parseInt(shType, 10));
+
+                    return Crypto.util.bytesToHex(sig);
+                } else {
+                    return false;
+                }
+            }
+
+            // https://tools.ietf.org/html/rfc6979#section-3.2
+            btrx.deterministicK = function (wif, hash, badrs) {
+                // if r or s were invalid when this function was used in signing,
+                // we do not want to actually compute r, s here for efficiency, so,
+                // we can increment badrs. explained at end of RFC 6979 section 3.2
+
+                // wif is b58check encoded wif privkey.
+                // hash is byte array of transaction digest.
+                // badrs is used only if the k resulted in bad r or s.
+
+                // some necessary things out of the way for clarity.
+                badrs = badrs || 0;
+                var key = bitjs.wif2privkey(wif);
+                var x = Crypto.util.hexToBytes(key['privkey'])
+                var curve = EllipticCurve.getSECCurveByName("secp256k1");
+                var N = curve.getN();
+
+                // Step: a
+                // hash is a byteArray of the message digest. so h1 == hash in our case
+
+                // Step: b
+                var v = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1
+                ];
+
+                // Step: c
+                var k = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0
+                ];
+
+                // Step: d
+                k = Crypto.HMAC(Crypto.SHA256, v.concat([0]).concat(x).concat(hash), k, {
+                    asBytes: true
+                });
+
+                // Step: e
+                v = Crypto.HMAC(Crypto.SHA256, v, k, {
+                    asBytes: true
+                });
+
+                // Step: f
+                k = Crypto.HMAC(Crypto.SHA256, v.concat([1]).concat(x).concat(hash), k, {
+                    asBytes: true
+                });
+
+                // Step: g
+                v = Crypto.HMAC(Crypto.SHA256, v, k, {
+                    asBytes: true
+                });
+
+                // Step: h1
+                var T = [];
+
+                // Step: h2 (since we know tlen = qlen, just copy v to T.)
+                v = Crypto.HMAC(Crypto.SHA256, v, k, {
+                    asBytes: true
+                });
+                T = v;
+
+                // Step: h3
+                var KBigInt = BigInteger.fromByteArrayUnsigned(T);
+
+                // loop if KBigInt is not in the range of [1, N-1] or if badrs needs incrementing.
+                var i = 0
+                while (KBigInt.compareTo(N) >= 0 || KBigInt.compareTo(BigInteger.ZERO) <= 0 || i <
+                    badrs) {
+                    k = Crypto.HMAC(Crypto.SHA256, v.concat([0]), k, {
+                        asBytes: true
+                    });
+                    v = Crypto.HMAC(Crypto.SHA256, v, k, {
+                        asBytes: true
+                    });
+                    v = Crypto.HMAC(Crypto.SHA256, v, k, {
+                        asBytes: true
+                    });
+                    T = v;
+                    KBigInt = BigInteger.fromByteArrayUnsigned(T);
+                    i++
+                };
+
+                return KBigInt;
+            };
+
+            btrx.writeBytesToScriptBuffer = function (buf, bytes) {
+                if (bytes.length < 76) { //OP_PUSHDATA1
+                    buf.push(bytes.length);
+                } else if (bytes.length <= 0xff) {
+                    buf.push(76); //OP_PUSHDATA1
+                    buf.push(bytes.length);
+                } else if (bytes.length <= 0xffff) {
+                    buf.push(77); //OP_PUSHDATA2
+                    buf.push(bytes.length & 0xff);
+                    buf.push((bytes.length >>> 8) & 0xff);
+                } else {
+                    buf.push(78); //OP_PUSHDATA4
+                    buf.push(bytes.length & 0xff);
+                    buf.push((bytes.length >>> 8) & 0xff);
+                    buf.push((bytes.length >>> 16) & 0xff);
+                    buf.push((bytes.length >>> 24) & 0xff);
+                }
+                buf = buf.concat(bytes);
+                return buf;
+            }
+
+            btrx.parseScript = function (script) {
+
+                var chunks = [];
+                var i = 0;
+
+                function readChunk(n) {
+                    chunks.push(script.slice(i, i + n));
+                    i += n;
+                };
+
+                while (i < script.length) {
+                    var opcode = script[i++];
+                    if (opcode >= 0xF0) {
+                        opcode = (opcode << 8) | script[i++];
+                    }
+
+                    var len;
+                    if (opcode > 0 && opcode < 76) { //OP_PUSHDATA1
+                        readChunk(opcode);
+                    } else if (opcode == 76) { //OP_PUSHDATA1
+                        len = script[i++];
+                        readChunk(len);
+                    } else if (opcode == 77) { //OP_PUSHDATA2
+                        len = (script[i++] << 8) | script[i++];
+                        readChunk(len);
+                    } else if (opcode == 78) { //OP_PUSHDATA4
+                        len = (script[i++] << 24) | (script[i++] << 16) | (script[i++] << 8) | script[i++];
+                        readChunk(len);
+                    } else {
+                        chunks.push(opcode);
+                    }
+
+                    if (i < 0x00) {
+                        break;
+                    }
+                }
+
+                return chunks;
+            }
+
+            btrx.decodeRedeemScript = function (rs) {
+                if (typeof rs == "string")
+                    rs = Crypto.util.hexToBytes(rs);
+                var script = this.parseScript(rs);
+                if (!(script[0] > 80 && script[script.length - 2] > 80 && script[script.length - 1] == 174)) //OP_CHECKMULTISIG
+                    throw "Invalid RedeemScript";
+                var r = {};
+                r.required = script[0] - 80;
+                r.pubkeys = [];
+                for (var i = 1; i < script.length - 2; i++)
+                    r.pubkeys.push(Crypto.util.bytesToHex(script[i]));
+                r.address = bitjs.pubkeys2multisig(r.pubkeys, r.required).address;
+                r.redeemscript = Crypto.util.bytesToHex(rs);
+                return r;
+            }
+
+            /* sign a "standard" input */
+            btrx.signinput = function (index, wif, sigHashType) {
+                var key = bitjs.wif2pubkey(wif);
+                var shType = sigHashType || 1;
+                var signature = this.transactionSig(index, wif, shType);
+                var buf = [];
+                var sigBytes = Crypto.util.hexToBytes(signature);
+                buf = this.writeBytesToScriptBuffer(buf, sigBytes);
+                var pubKeyBytes = Crypto.util.hexToBytes(key['pubkey']);
+                buf.push(pubKeyBytes.length);
+                buf = buf.concat(pubKeyBytes);
+                this.inputs[index].script = buf;
+                return true;
+            }
+
+            /* sign a multisig input */
+            btrx.signmultisig = function (index, wif, sigHashType) {
+
+                var script = Array.from(this.inputs[index].script);
+                var redeemScript, sigsList = [];
+
+                if (script[0] == 0) { //script with signatures
+                    script = this.parseScript(script);
+                    for (var i = 0; i < script.length; i++) {
+                        if (Array.isArray(script[i])) {
+                            if (script[i][0] == 48) //0x30 DERSequence
+                                sigsList.push(script[i]);
+                            else if (script[i][0] >= 80 && script[i][script[i].length - 1] == 174) //OP_CHECKMULTISIG
+                                redeemScript = script[i];
+                        }
+                    }
+                } else { //script = redeemscript
+                    redeemScript = script;
+                }
+
+                var pubkeyList = this.decodeRedeemScript(redeemScript).pubkeys;
+                var pubkey = bitjs.wif2pubkey(wif)['pubkey'];
+                if (!pubkeyList.includes(pubkey)) //wif not a part of this multisig
+                    return false;
+
+                pubkeyList = pubkeyList.map(pub => Crypto.util.hexToBytes(bitjs.pubkeydecompress(pub))); //decompress pubkeys
+
+                var shType = sigHashType || 1;
+                this.inputs[index].script = redeemScript; //script to be signed is redeemscript
+                var signature = Crypto.util.hexToBytes(this.transactionSig(index, wif, shType));
+                sigsList.push(signature);
+
+                var buf = [];
+                buf.push(0);
+
+                //verify signatures and order them (also remove duplicate sigs)
+                for (let x in pubkeyList) {
+                    for (let y in sigsList) {
+                        var sighash = Crypto.util.hexToBytes(this.transactionHash(index, sigsList[y].slice(-1)[0] * 1));
+                        if (bitjs.verifySignature(sighash, sigsList[y], pubkeyList[x])) {
+                            buf = this.writeBytesToScriptBuffer(buf, sigsList[y]);
+                            break; //ensures duplicate sigs from same pubkey are not added
+                        }
+                    }
+                }
+
+                //append redeemscript
+                buf = this.writeBytesToScriptBuffer(buf, redeemScript);
+
+                this.inputs[index].script = buf;
+                return true;
+            }
+
+            /* sign inputs */
+            btrx.sign = function (wif, sigHashType) {
+                var shType = sigHashType || 1;
+                for (var i = 0; i < this.inputs.length; i++) {
+
+                    var decodedScript = this.scriptDecode(i);
+
+                    if (decodedScript.type == "scriptpubkey" && decodedScript.signed == false) { //regular 
+                        var addr = bitjs.wif2address(wif)["address"];;
+                        if (decodedScript.pubhash == Crypto.util.bytesToHex(this.addressDecode(addr).bytes)) //input belongs to wif
+                            this.signinput(i, wif, shType);
+                    } else if (decodedScript.type == "multisig") { //multisig
+                        this.signmultisig(i, wif, shType);
+                    }
+                }
+                return this.serialize();
+            }
+
+            // function to find type of the script in input
+            btrx.scriptDecode = function (index) {
+                var script = this.parseScript(this.inputs[index].script);
+                if (script.length == 5 && script[script.length - 1] == 172) {
+                    //OP_DUP OP_HASH160 [address bytes] OP_EQUALVERIFY OP_CHECKSIG
+                    // regular scriptPubkey (not signed)
+                    return { type: 'scriptpubkey', signed: false, pubhash: Crypto.util.bytesToHex(script[2]) };
+                } else if (script.length == 2 && script[0][0] == 48) {
+                    //[signature] [pubkey]
+                    //(probably) regular signed
+                    return { type: 'scriptpubkey', signed: true };
+                } else if (script[0] == 0 && script[script.length - 1][script[script.length - 1].length - 1] == 174) {
+                    //0 [signatues] [redeemscript OP_CHECKMULTISIG]
+                    // multisig with signature
+                    return { type: 'multisig', rs: script[script.length - 1] };
+                } else if (script[0] >= 80 && script[script.length - 1] == 174) {
+                    //redeemscript: 80+ [pubkeys] OP_CHECKMULTISIG
+                    // multisig without signature
+                    return { type: 'multisig', rs: Array.from(this.inputs[index].script) };
+                }
+            }
+
+            /* serialize a transaction */
+            btrx.serialize = function () {
+                var buffer = [];
+                buffer = buffer.concat(bitjs.numToBytes(parseInt(this.version), 4));
+
+                buffer = buffer.concat(bitjs.numToVarInt(this.inputs.length));
+                for (var i = 0; i < this.inputs.length; i++) {
+                    var txin = this.inputs[i];
+                    buffer = buffer.concat(Crypto.util.hexToBytes(txin.outpoint.hash).reverse());
+                    buffer = buffer.concat(bitjs.numToBytes(parseInt(txin.outpoint.index), 4));
+                    var scriptBytes = txin.script;
+                    buffer = buffer.concat(bitjs.numToVarInt(scriptBytes.length));
+                    buffer = buffer.concat(scriptBytes);
+                    buffer = buffer.concat(bitjs.numToBytes(parseInt(txin.sequence), 4));
+
+                }
+                buffer = buffer.concat(bitjs.numToVarInt(this.outputs.length));
+
+                for (var i = 0; i < this.outputs.length; i++) {
+                    var txout = this.outputs[i];
+                    buffer = buffer.concat(bitjs.numToBytes(txout.value, 8));
+                    var scriptBytes = txout.script;
+                    buffer = buffer.concat(bitjs.numToVarInt(scriptBytes.length));
+                    buffer = buffer.concat(scriptBytes);
+                }
+
+                buffer = buffer.concat(bitjs.numToBytes(parseInt(this.locktime), 4));
+
+                //flochange -- append floData field
+                buffer = buffer.concat(bitjs.numToVarInt(this.floData.length));
+                buffer = buffer.concat(bitjs.strToBytes(this.floData))
+
+                return Crypto.util.bytesToHex(buffer);
+            }
+
+            /* deserialize a transaction */
+            function deserialize(buffer) {
+                if (typeof buffer == "string") {
+                    buffer = Crypto.util.hexToBytes(buffer)
+                }
+
+                var pos = 0;
+
+                var readAsInt = function (bytes) {
+                    if (bytes == 0) return 0;
+                    pos++;
+                    return buffer[pos - 1] + readAsInt(bytes - 1) * 256;
+                }
+
+                var readVarInt = function () {
+                    pos++;
+                    if (buffer[pos - 1] < 253) {
+                        return buffer[pos - 1];
+                    }
+                    return readAsInt(buffer[pos - 1] - 251);
+                }
+
+                var readBytes = function (bytes) {
+                    pos += bytes;
+                    return buffer.slice(pos - bytes, pos);
+                }
+
+                var readVarString = function () {
+                    var size = readVarInt();
+                    return readBytes(size);
+                }
+
+                var bytesToStr = function (bytes) {
+                    return bytes.map(b => String.fromCharCode(b)).join('');
+                }
+
+                const self = btrx;
+
+                self.version = readAsInt(4);
+
+                var ins = readVarInt();
+                for (var i = 0; i < ins; i++) {
+                    self.inputs.push({
+                        outpoint: {
+                            hash: Crypto.util.bytesToHex(readBytes(32).reverse()),
+                            index: readAsInt(4)
+                        },
+                        script: readVarString(),
+                        sequence: readAsInt(4)
+                    });
+                }
+
+                var outs = readVarInt();
+                for (var i = 0; i < outs; i++) {
+                    self.outputs.push({
+                        value: bitjs.bytesToNum(readBytes(8)),
+                        script: readVarString()
+                    });
+                }
+
+                self.lock_time = readAsInt(4);
+
+                //flochange - floData field
+                self.floData = bytesToStr(readVarString());
+
+                return self;
+            }
+
+            //deserialize the data if passed
+            if (tx_data)
+                deserialize(tx_data);
+
+            return btrx;
+
+        }
+
+        bitjs.numToBytes = function (num, bytes) {
+            if (typeof bytes === "undefined") bytes = 8;
+            if (bytes == 0) {
+                return [];
+            } else if (num == -1) {
+                return Crypto.util.hexToBytes("ffffffffffffffff");
+            } else {
+                return [num % 256].concat(bitjs.numToBytes(Math.floor(num / 256), bytes - 1));
+            }
+        }
+
+        bitjs.numToByteArray = function (num) {
+            if (num <= 256) {
+                return [num];
+            } else {
+                return [num % 256].concat(bitjs.numToByteArray(Math.floor(num / 256)));
+            }
+        }
+
+        bitjs.numToVarInt = function (num) {
+            if (num < 253) {
+                return [num];
+            } else if (num < 65536) {
+                return [253].concat(bitjs.numToBytes(num, 2));
+            } else if (num < 4294967296) {
+                return [254].concat(bitjs.numToBytes(num, 4));
+            } else {
+                return [255].concat(bitjs.numToBytes(num, 8));
+            }
+        }
+
+        bitjs.bytesToNum = function (bytes) {
+            if (bytes.length == 0) return 0;
+            else return bytes[0] + 256 * bitjs.bytesToNum(bytes.slice(1));
+        }
+
+        //flochange - adding fn to convert string (for flodata) to byte
+        bitjs.strToBytes = function (str) {
+            return str.split('').map(c => c.charCodeAt(0));
+        }
+
+        /* decompress an compressed public key */
+        bitjs.pubkeydecompress = function (pubkey) {
+            if ((typeof (pubkey) == 'string') && pubkey.match(/^[a-f0-9]+$/i)) {
+                var curve = EllipticCurve.getSECCurveByName("secp256k1");
+                try {
+                    var pt = curve.curve.decodePointHex(pubkey);
+                    var x = pt.getX().toBigInteger();
+                    var y = pt.getY().toBigInteger();
+
+                    var publicKeyBytes = EllipticCurve.integerToBytes(x, 32);
+                    publicKeyBytes = publicKeyBytes.concat(EllipticCurve.integerToBytes(y, 32));
+                    publicKeyBytes.unshift(0x04);
+                    return Crypto.util.bytesToHex(publicKeyBytes);
+                } catch (e) {
+                    // console.log(e);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        bitjs.verifySignature = function (hash, sig, pubkey) {
+            return Bitcoin.ECDSA.verify(hash, sig, pubkey);
+        }
+
+        /* clone an object */
+        bitjs.clone = function (obj) {
+            if (obj == null || typeof (obj) != 'object') return obj;
+            var temp = new obj.constructor();
+
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    temp[key] = bitjs.clone(obj[key]);
+                }
+            }
+            return temp;
+        }
+
+        var B58 = bitjs.Base58 = {
+            alphabet: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+            validRegex: /^[1-9A-HJ-NP-Za-km-z]+$/,
+            base: BigInteger.valueOf(58),
+
+            /**
+             * Convert a byte array to a base58-encoded string.
+             *
+             * Written by Mike Hearn for BitcoinJ.
+             *   Copyright (c) 2011 Google Inc.
+             *
+             * Ported to JavaScript by Stefan Thomas.
+             */
+            encode: function (input) {
+                var bi = BigInteger.fromByteArrayUnsigned(input);
+                var chars = [];
+
+                while (bi.compareTo(B58.base) >= 0) {
+                    var mod = bi.mod(B58.base);
+                    chars.unshift(B58.alphabet[mod.intValue()]);
+                    bi = bi.subtract(mod).divide(B58.base);
+                }
+                chars.unshift(B58.alphabet[bi.intValue()]);
+
+                // Convert leading zeros too.
+                for (var i = 0; i < input.length; i++) {
+                    if (input[i] == 0x00) {
+                        chars.unshift(B58.alphabet[0]);
+                    } else break;
+                }
+
+                return chars.join('');
+            },
+
+            /**
+             * Convert a base58-encoded string to a byte array.
+             *
+             * Written by Mike Hearn for BitcoinJ.
+             *   Copyright (c) 2011 Google Inc.
+             *
+             * Ported to JavaScript by Stefan Thomas.
+             */
+            decode: function (input) {
+                var bi = BigInteger.valueOf(0);
+                var leadingZerosNum = 0;
+                for (var i = input.length - 1; i >= 0; i--) {
+                    var alphaIndex = B58.alphabet.indexOf(input[i]);
+                    if (alphaIndex < 0) {
+                        throw "Invalid character";
+                    }
+                    bi = bi.add(BigInteger.valueOf(alphaIndex)
+                        .multiply(B58.base.pow(input.length - 1 - i)));
+
+                    // This counts leading zero bytes
+                    if (input[i] == "1") leadingZerosNum++;
+                    else leadingZerosNum = 0;
+                }
+                var bytes = bi.toByteArrayUnsigned();
+
+                // Add leading zeros
+                while (leadingZerosNum-- > 0) bytes.unshift(0);
+
+                return bytes;
+            }
+        }
+        return bitjs;
+
+    })();
+
+    //Bitcoin.js
+    (function () {
+        /*
+            Copyright (c) 2011 Stefan Thomas
+        
+            Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+        
+            The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+        
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        */
+        var Bitcoin = GLOBAL.Bitcoin = {};
+
+        //https://raw.github.com/bitcoinjs/bitcoinjs-lib/c952aaeb3ee472e3776655b8ea07299ebed702c7/src/base58.js
+        var B58 = Bitcoin.Base58 = {
+            alphabet: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+            validRegex: /^[1-9A-HJ-NP-Za-km-z]+$/,
+            base: BigInteger.valueOf(58),
+
+            /**
+             * Convert a byte array to a base58-encoded string.
+             *
+             * Written by Mike Hearn for BitcoinJ.
+             *   Copyright (c) 2011 Google Inc.
+             *
+             * Ported to JavaScript by Stefan Thomas.
+             */
+            encode: function (input) {
+                var bi = BigInteger.fromByteArrayUnsigned(input);
+                var chars = [];
+
+                while (bi.compareTo(B58.base) >= 0) {
+                    var mod = bi.mod(B58.base);
+                    chars.unshift(B58.alphabet[mod.intValue()]);
+                    bi = bi.subtract(mod).divide(B58.base);
+                }
+                chars.unshift(B58.alphabet[bi.intValue()]);
+
+                // Convert leading zeros too.
+                for (var i = 0; i < input.length; i++) {
+                    if (input[i] == 0x00) {
+                        chars.unshift(B58.alphabet[0]);
+                    } else break;
+                }
+
+                return chars.join('');
+            },
+
+            /**
+             * Convert a base58-encoded string to a byte array.
+             *
+             * Written by Mike Hearn for BitcoinJ.
+             *   Copyright (c) 2011 Google Inc.
+             *
+             * Ported to JavaScript by Stefan Thomas.
+             */
+            decode: function (input) {
+                var bi = BigInteger.valueOf(0);
+                var leadingZerosNum = 0;
+                for (var i = input.length - 1; i >= 0; i--) {
+                    var alphaIndex = B58.alphabet.indexOf(input[i]);
+                    if (alphaIndex < 0) {
+                        throw "Invalid character";
+                    }
+                    bi = bi.add(BigInteger.valueOf(alphaIndex)
+                        .multiply(B58.base.pow(input.length - 1 - i)));
+
+                    // This counts leading zero bytes
+                    if (input[i] == "1") leadingZerosNum++;
+                    else leadingZerosNum = 0;
+                }
+                var bytes = bi.toByteArrayUnsigned();
+
+                // Add leading zeros
+                while (leadingZerosNum-- > 0) bytes.unshift(0);
+
+                return bytes;
+            }
+        };
+
+        //https://raw.github.com/bitcoinjs/bitcoinjs-lib/09e8c6e184d6501a0c2c59d73ca64db5c0d3eb95/src/address.js
+        Bitcoin.Address = function (bytes) {
+            if ("string" == typeof bytes) {
+                var d = Bitcoin.Address.decodeString(bytes);
+                bytes = d.hash;
+                if (d.version == Bitcoin.Address.standardVersion || d.version == Bitcoin.Address.multisigVersion)
+                    this.version = d.version;
+                else throw "Version (prefix) " + d.version + " not supported!";
+            } else {
+                this.version = Bitcoin.Address.standardVersion;
+            }
+            this.hash = bytes;
+        };
+
+        Bitcoin.Address.standardVersion = 0x23; // (FLO mainnet 0x23, 35D), (Bitcoin Mainnet, 0x00, 0D)
+        Bitcoin.Address.multisigVersion = 0x5e; // (FLO multisig 0x5e, 94D)
+
+        if (GLOBAL.cryptocoin == "FLO_TEST") {
+            Bitcoin.Address.standardVersion = 0x73; // (FLO testnet 0x73, 115D), (Bitcoin Mainnet, 0x00, 0D)
+            Bitcoin.Address.multisigVersion = 0xc6; // (FLO testnet multisig 0xc6, 198D)
+        }
+
+        /**
+         * Serialize this object as a standard Bitcoin address.
+         *
+         * Returns the address as a base58-encoded string in the standardized format.
+         */
+        Bitcoin.Address.prototype.toString = function (version = null) {
+            // Get a copy of the hash
+            var hash = this.hash.slice(0);
+
+            // Version
+            hash.unshift(version !== null ? version : this.version);
+            var checksum = Crypto.SHA256(Crypto.SHA256(hash, {
+                asBytes: true
+            }), {
+                asBytes: true
+            });
+            var bytes = hash.concat(checksum.slice(0, 4));
+            return Bitcoin.Base58.encode(bytes);
+        };
+
+        Bitcoin.Address.prototype.getHashBase64 = function () {
+            return Crypto.util.bytesToBase64(this.hash);
+        };
+
+        /**
+         * Parse a Bitcoin address contained in a string.
+         */
+        Bitcoin.Address.decodeString = function (string) {
+            var bytes = Bitcoin.Base58.decode(string);
+            var hash = bytes.slice(0, 21);
+            var checksum = Crypto.SHA256(Crypto.SHA256(hash, {
+                asBytes: true
+            }), {
+                asBytes: true
+            });
+
+            if (checksum[0] != bytes[21] ||
+                checksum[1] != bytes[22] ||
+                checksum[2] != bytes[23] ||
+                checksum[3] != bytes[24]) {
+                throw "Checksum validation failed!";
+            }
+
+            /*if (version != hash.shift()) {
+                throw "Version " + hash.shift() + " not supported!";
+            }*/
+
+            var version = hash.shift();
+            return { version, hash };
+        };
+        //https://raw.github.com/bitcoinjs/bitcoinjs-lib/e90780d3d3b8fc0d027d2bcb38b80479902f223e/src/ecdsa.js
+        Bitcoin.ECDSA = (function () {
+            var ecparams = EllipticCurve.getSECCurveByName("secp256k1");
+            var rng = new SecureRandom();
+
+            var P_OVER_FOUR = null;
+
+            function implShamirsTrick(P, k, Q, l) {
+                var m = Math.max(k.bitLength(), l.bitLength());
+                var Z = P.add2D(Q);
+                var R = P.curve.getInfinity();
+
+                for (var i = m - 1; i >= 0; --i) {
+                    R = R.twice2D();
+
+                    R.z = BigInteger.ONE;
+
+                    if (k.testBit(i)) {
+                        if (l.testBit(i)) {
+                            R = R.add2D(Z);
+                        } else {
+                            R = R.add2D(P);
+                        }
+                    } else {
+                        if (l.testBit(i)) {
+                            R = R.add2D(Q);
+                        }
+                    }
+                }
+
+                return R;
+            };
+
+            var ECDSA = {
+                getBigRandom: function (limit) {
+                    return new BigInteger(limit.bitLength(), rng)
+                        .mod(limit.subtract(BigInteger.ONE))
+                        .add(BigInteger.ONE);
+                },
+                sign: function (hash, priv) {
+                    var d = priv;
+                    var n = ecparams.getN();
+                    var e = BigInteger.fromByteArrayUnsigned(hash);
+
+                    do {
+                        var k = ECDSA.getBigRandom(n);
+                        var G = ecparams.getG();
+                        var Q = G.multiply(k);
+                        var r = Q.getX().toBigInteger().mod(n);
+                    } while (r.compareTo(BigInteger.ZERO) <= 0);
+
+                    var s = k.modInverse(n).multiply(e.add(d.multiply(r))).mod(n);
+
+                    return ECDSA.serializeSig(r, s);
+                },
+
+                verify: function (hash, sig, pubkey) {
+                    var r, s;
+                    if (Bitcoin.Util.isArray(sig)) {
+                        var obj = ECDSA.parseSig(sig);
+                        r = obj.r;
+                        s = obj.s;
+                    } else if ("object" === typeof sig && sig.r && sig.s) {
+                        r = sig.r;
+                        s = sig.s;
+                    } else {
+                        throw "Invalid value for signature";
+                    }
+
+                    var Q;
+                    if (pubkey instanceof EllipticCurve.PointFp) {
+                        Q = pubkey;
+                    } else if (Bitcoin.Util.isArray(pubkey)) {
+                        Q = EllipticCurve.PointFp.decodeFrom(ecparams.getCurve(), pubkey);
+                    } else {
+                        throw "Invalid format for pubkey value, must be byte array or ec.PointFp";
+                    }
+                    var e = BigInteger.fromByteArrayUnsigned(hash);
+
+                    return ECDSA.verifyRaw(e, r, s, Q);
+                },
+
+                verifyRaw: function (e, r, s, Q) {
+                    var n = ecparams.getN();
+                    var G = ecparams.getG();
+
+                    if (r.compareTo(BigInteger.ONE) < 0 ||
+                        r.compareTo(n) >= 0)
+                        return false;
+
+                    if (s.compareTo(BigInteger.ONE) < 0 ||
+                        s.compareTo(n) >= 0)
+                        return false;
+
+                    var c = s.modInverse(n);
+
+                    var u1 = e.multiply(c).mod(n);
+                    var u2 = r.multiply(c).mod(n);
+
+                    // TODO(!!!): For some reason Shamir's trick isn't working with
+                    // signed message verification!? Probably an implementation
+                    // error!
+                    //var point = implShamirsTrick(G, u1, Q, u2);
+                    var point = G.multiply(u1).add(Q.multiply(u2));
+
+                    var v = point.getX().toBigInteger().mod(n);
+
+                    return v.equals(r);
+                },
+
+                /**
+                 * Serialize a signature into DER format.
+                 *
+                 * Takes two BigIntegers representing r and s and returns a byte array.
+                 */
+                serializeSig: function (r, s) {
+                    var rBa = r.toByteArraySigned();
+                    var sBa = s.toByteArraySigned();
+
+                    var sequence = [];
+                    sequence.push(0x02); // INTEGER
+                    sequence.push(rBa.length);
+                    sequence = sequence.concat(rBa);
+
+                    sequence.push(0x02); // INTEGER
+                    sequence.push(sBa.length);
+                    sequence = sequence.concat(sBa);
+
+                    sequence.unshift(sequence.length);
+                    sequence.unshift(0x30); // SEQUENCE
+
+                    return sequence;
+                },
+
+                /**
+                 * Parses a byte array containing a DER-encoded signature.
+                 *
+                 * This function will return an object of the form:
+                 *
+                 * {
+                 *   r: BigInteger,
+                 *   s: BigInteger
+                 * }
+                 */
+                parseSig: function (sig) {
+                    var cursor;
+                    if (sig[0] != 0x30)
+                        throw new Error("Signature not a valid DERSequence");
+
+                    cursor = 2;
+                    if (sig[cursor] != 0x02)
+                        throw new Error("First element in signature must be a DERInteger");;
+                    var rBa = sig.slice(cursor + 2, cursor + 2 + sig[cursor + 1]);
+
+                    cursor += 2 + sig[cursor + 1];
+                    if (sig[cursor] != 0x02)
+                        throw new Error("Second element in signature must be a DERInteger");
+                    var sBa = sig.slice(cursor + 2, cursor + 2 + sig[cursor + 1]);
+
+                    cursor += 2 + sig[cursor + 1];
+
+                    //if (cursor != sig.length)
+                    //  throw new Error("Extra bytes in signature");
+
+                    var r = BigInteger.fromByteArrayUnsigned(rBa);
+                    var s = BigInteger.fromByteArrayUnsigned(sBa);
+
+                    return {
+                        r: r,
+                        s: s
+                    };
+                },
+
+                parseSigCompact: function (sig) {
+                    if (sig.length !== 65) {
+                        throw "Signature has the wrong length";
+                    }
+
+                    // Signature is prefixed with a type byte storing three bits of
+                    // information.
+                    var i = sig[0] - 27;
+                    if (i < 0 || i > 7) {
+                        throw "Invalid signature type";
+                    }
+
+                    var n = ecparams.getN();
+                    var r = BigInteger.fromByteArrayUnsigned(sig.slice(1, 33)).mod(n);
+                    var s = BigInteger.fromByteArrayUnsigned(sig.slice(33, 65)).mod(n);
+
+                    return {
+                        r: r,
+                        s: s,
+                        i: i
+                    };
+                },
+
+                /**
+                 * Recover a public key from a signature.
+                 *
+                 * See SEC 1: Elliptic Curve Cryptography, section 4.1.6, "Public
+                 * Key Recovery Operation".
+                 *
+                 * http://www.secg.org/download/aid-780/sec1-v2.pdf
+                 */
+                recoverPubKey: function (r, s, hash, i) {
+                    // The recovery parameter i has two bits.
+                    i = i & 3;
+
+                    // The less significant bit specifies whether the y coordinate
+                    // of the compressed point is even or not.
+                    var isYEven = i & 1;
+
+                    // The more significant bit specifies whether we should use the
+                    // first or second candidate key.
+                    var isSecondKey = i >> 1;
+
+                    var n = ecparams.getN();
+                    var G = ecparams.getG();
+                    var curve = ecparams.getCurve();
+                    var p = curve.getQ();
+                    var a = curve.getA().toBigInteger();
+                    var b = curve.getB().toBigInteger();
+
+                    // We precalculate (p + 1) / 4 where p is if the field order
+                    if (!P_OVER_FOUR) {
+                        P_OVER_FOUR = p.add(BigInteger.ONE).divide(BigInteger.valueOf(4));
+                    }
+
+                    // 1.1 Compute x
+                    var x = isSecondKey ? r.add(n) : r;
+
+                    // 1.3 Convert x to point
+                    var alpha = x.multiply(x).multiply(x).add(a.multiply(x)).add(b).mod(p);
+                    var beta = alpha.modPow(P_OVER_FOUR, p);
+
+                    var xorOdd = beta.isEven() ? (i % 2) : ((i + 1) % 2);
+                    // If beta is even, but y isn't or vice versa, then convert it,
+                    // otherwise we're done and y == beta.
+                    var y = (beta.isEven() ? !isYEven : isYEven) ? beta : p.subtract(beta);
+
+                    // 1.4 Check that nR is at infinity
+                    var R = new EllipticCurve.PointFp(curve,
+                        curve.fromBigInteger(x),
+                        curve.fromBigInteger(y));
+                    R.validate();
+
+                    // 1.5 Compute e from M
+                    var e = BigInteger.fromByteArrayUnsigned(hash);
+                    var eNeg = BigInteger.ZERO.subtract(e).mod(n);
+
+                    // 1.6 Compute Q = r^-1 (sR - eG)
+                    var rInv = r.modInverse(n);
+                    var Q = implShamirsTrick(R, s, G, eNeg).multiply(rInv);
+
+                    Q.validate();
+                    if (!ECDSA.verifyRaw(e, r, s, Q)) {
+                        throw "Pubkey recovery unsuccessful";
+                    }
+
+                    var pubKey = new Bitcoin.ECKey();
+                    pubKey.pub = Q;
+                    return pubKey;
+                },
+
+                /**
+                 * Calculate pubkey extraction parameter.
+                 *
+                 * When extracting a pubkey from a signature, we have to
+                 * distinguish four different cases. Rather than putting this
+                 * burden on the verifier, Bitcoin includes a 2-bit value with the
+                 * signature.
+                 *
+                 * This function simply tries all four cases and returns the value
+                 * that resulted in a successful pubkey recovery.
+                 */
+                calcPubkeyRecoveryParam: function (address, r, s, hash) {
+                    for (var i = 0; i < 4; i++) {
+                        try {
+                            var pubkey = Bitcoin.ECDSA.recoverPubKey(r, s, hash, i);
+                            if (pubkey.getBitcoinAddress().toString() == address) {
+                                return i;
+                            }
+                        } catch (e) { }
+                    }
+                    throw "Unable to find valid recovery factor";
+                }
+            };
+
+            return ECDSA;
+        })();
+        Bitcoin.KeyPool = (function () {
+            var KeyPool = function () {
+                this.keyArray = [];
+
+                this.push = function (item) {
+                    if (item == null || item.priv == null) return;
+                    var doAdd = true;
+                    // prevent duplicates from being added to the array
+                    for (var index in this.keyArray) {
+                        var currentItem = this.keyArray[index];
+                        if (currentItem != null && currentItem.priv != null && item.getBitcoinAddress() == currentItem.getBitcoinAddress()) {
+                            doAdd = false;
+                            break;
+                        }
+                    }
+                    if (doAdd) this.keyArray.push(item);
+                };
+
+                this.reset = function () {
+                    this.keyArray = [];
+                };
+
+                this.getArray = function () {
+                    // copy array
+                    return this.keyArray.slice(0);
+                };
+
+                this.setArray = function (ka) {
+                    this.keyArray = ka;
+                };
+
+                this.length = function () {
+                    return this.keyArray.length;
+                };
+
+                this.toString = function () {
+                    var keyPoolString = "# = " + this.length() + "\n";
+                    var pool = this.getArray();
+                    for (var index in pool) {
+                        var item = pool[index];
+                        if (Bitcoin.Util.hasMethods(item, 'getBitcoinAddress', 'toString')) {
+                            if (item != null) {
+                                keyPoolString += "\"" + item.getBitcoinAddress() + "\"" + ", \"" + item.toString("wif") + "\"\n";
+                            }
+                        }
+                    }
+
+                    return keyPoolString;
+                };
+
+                return this;
+            };
+
+            return new KeyPool();
+        })();
+
+        Bitcoin.Bip38Key = (function () {
+            var Bip38 = function (address, encryptedKey) {
+                this.address = address;
+                this.priv = encryptedKey;
+            };
+
+            Bip38.prototype.getBitcoinAddress = function () {
+                return this.address;
+            };
+
+            Bip38.prototype.toString = function () {
+                return this.priv;
+            };
+
+            return Bip38;
+        })();
+
+        //https://raw.github.com/pointbiz/bitcoinjs-lib/9b2f94a028a7bc9bed94e0722563e9ff1d8e8db8/src/eckey.js
+        Bitcoin.ECKey = (function () {
+            var ECDSA = Bitcoin.ECDSA;
+            var KeyPool = Bitcoin.KeyPool;
+            var ecparams = EllipticCurve.getSECCurveByName("secp256k1");
+
+            var ECKey = function (input) {
+                if (!input) {
+                    // Generate new key
+                    var n = ecparams.getN();
+                    this.priv = ECDSA.getBigRandom(n);
+                } else if (input instanceof BigInteger) {
+                    // Input is a private key value
+                    this.priv = input;
+                } else if (Bitcoin.Util.isArray(input)) {
+                    // Prepend zero byte to prevent interpretation as negative integer
+                    this.priv = BigInteger.fromByteArrayUnsigned(input);
+                } else if ("string" == typeof input) {
+                    var bytes = null;
+                    try {
+
+                        // This part is edited for FLO. FLO WIF are always compressed WIF (length of 52). 
+                        if ((/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{52}$/.test(input))) {
+                            bytes = ECKey.decodeCompressedWalletImportFormat(input);
+                            this.compressed = true;
+                        } else if (ECKey.isHexFormat(input)) {
+                            bytes = Crypto.util.hexToBytes(input);
+                        }
+
+
+                        /*
+                            if (ECKey.isWalletImportFormat(input)) {
+                                bytes = ECKey.decodeWalletImportFormat(input);
+                            } else if (ECKey.isCompressedWalletImportFormat(input)) {
+                                bytes = ECKey.decodeCompressedWalletImportFormat(input);
+                                this.compressed = true;
+                            } else if (ECKey.isMiniFormat(input)) {
+                                bytes = Crypto.SHA256(input, { asBytes: true });
+                            } else if (ECKey.isHexFormat(input)) {
+                                bytes = Crypto.util.hexToBytes(input);
+                            } else if (ECKey.isBase64Format(input)) {
+                                bytes = Crypto.util.base64ToBytes(input);
+                            }
+                            */
+                    } catch (exc1) {
+                        this.setError(exc1);
+                    }
+
+                    if (ECKey.isBase6Format(input)) {
+                        this.priv = new BigInteger(input, 6);
+                    } else if (bytes == null || bytes.length != 32) {
+                        this.priv = null;
+                    } else {
+                        // Prepend zero byte to prevent interpretation as negative integer
+                        this.priv = BigInteger.fromByteArrayUnsigned(bytes);
+                    }
+                }
+
+                this.compressed = (this.compressed == undefined) ? !!ECKey.compressByDefault : this.compressed;
+                try {
+                    // check not zero
+                    if (this.priv != null && BigInteger.ZERO.compareTo(this.priv) == 0) this.setError("Error: BigInteger equal to zero.");
+                    // valid range [0x1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140])
+                    var hexKeyRangeLimit = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140";
+                    var rangeLimitBytes = Crypto.util.hexToBytes(hexKeyRangeLimit);
+                    var limitBigInt = BigInteger.fromByteArrayUnsigned(rangeLimitBytes);
+                    if (this.priv != null && limitBigInt.compareTo(this.priv) < 0) this.setError("Error: BigInteger outside of curve range.")
+
+                    if (this.priv != null) {
+                        KeyPool.push(this);
+                    }
+                } catch (exc2) {
+                    this.setError(exc2);
+                }
+            };
+
+            if (GLOBAL.cryptocoin == "FLO")
+                ECKey.privateKeyPrefix = 0xA3; //(Bitcoin mainnet 0x80    testnet 0xEF) (FLO mainnet 0xA3 163 D)
+            else if (GLOBAL.cryptocoin == "FLO_TEST")
+                ECKey.privateKeyPrefix = 0xEF; //FLO testnet
+
+            /**
+             * Whether public keys should be returned compressed by default.
+             */
+            ECKey.compressByDefault = false;
+
+            /**
+             * Set whether the public key should be returned compressed or not.
+             */
+            ECKey.prototype.setError = function (err) {
+                this.error = err;
+                this.priv = null;
+                return this;
+            };
+
+            /**
+             * Set whether the public key should be returned compressed or not.
+             */
+            ECKey.prototype.setCompressed = function (v) {
+                this.compressed = !!v;
+                if (this.pubPoint) this.pubPoint.compressed = this.compressed;
+                return this;
+            };
+
+            /*
+             * Return public key as a byte array in DER encoding
+             */
+            ECKey.prototype.getPub = function () {
+                if (this.compressed) {
+                    if (this.pubComp) return this.pubComp;
+                    return this.pubComp = this.getPubPoint().getEncoded(1);
+                } else {
+                    if (this.pubUncomp) return this.pubUncomp;
+                    return this.pubUncomp = this.getPubPoint().getEncoded(0);
+                }
+            };
+
+            /**
+             * Return public point as ECPoint object.
+             */
+            ECKey.prototype.getPubPoint = function () {
+                if (!this.pubPoint) {
+                    this.pubPoint = ecparams.getG().multiply(this.priv);
+                    this.pubPoint.compressed = this.compressed;
+                }
+                return this.pubPoint;
+            };
+
+            ECKey.prototype.getPubKeyHex = function () {
+                if (this.compressed) {
+                    if (this.pubKeyHexComp) return this.pubKeyHexComp;
+                    return this.pubKeyHexComp = Crypto.util.bytesToHex(this.getPub()).toString().toUpperCase();
+                } else {
+                    if (this.pubKeyHexUncomp) return this.pubKeyHexUncomp;
+                    return this.pubKeyHexUncomp = Crypto.util.bytesToHex(this.getPub()).toString().toUpperCase();
+                }
+            };
+
+            /**
+             * Get the pubKeyHash for this key.
+             *
+             * This is calculated as RIPE160(SHA256([encoded pubkey])) and returned as
+             * a byte array.
+             */
+            ECKey.prototype.getPubKeyHash = function () {
+                if (this.compressed) {
+                    if (this.pubKeyHashComp) return this.pubKeyHashComp;
+                    return this.pubKeyHashComp = Bitcoin.Util.sha256ripe160(this.getPub());
+                } else {
+                    if (this.pubKeyHashUncomp) return this.pubKeyHashUncomp;
+                    return this.pubKeyHashUncomp = Bitcoin.Util.sha256ripe160(this.getPub());
+                }
+            };
+
+            ECKey.prototype.getBitcoinAddress = function () {
+                var hash = this.getPubKeyHash();
+                var addr = new Bitcoin.Address(hash);
+                return addr.toString();
+            };
+
+            /*
+             * Takes a public point as a hex string or byte array
+             */
+            ECKey.prototype.setPub = function (pub) {
+                // byte array
+                if (Bitcoin.Util.isArray(pub)) {
+                    pub = Crypto.util.bytesToHex(pub).toString().toUpperCase();
+                }
+                var ecPoint = ecparams.getCurve().decodePointHex(pub);
+                this.setCompressed(ecPoint.compressed);
+                this.pubPoint = ecPoint;
+                return this;
+            };
+
+            // Sipa Private Key Wallet Import Format
+            ECKey.prototype.getBitcoinWalletImportFormat = function () {
+                var bytes = this.getBitcoinPrivateKeyByteArray();
+                if (bytes == null) return "";
+                bytes.unshift(ECKey.privateKeyPrefix); // prepend 0x80 byte
+                if (this.compressed) bytes.push(0x01); // append 0x01 byte for compressed format
+                var checksum = Crypto.SHA256(Crypto.SHA256(bytes, {
+                    asBytes: true
+                }), {
+                    asBytes: true
+                });
+                bytes = bytes.concat(checksum.slice(0, 4));
+                var privWif = Bitcoin.Base58.encode(bytes);
+                return privWif;
+            };
+
+            // Private Key Hex Format
+            ECKey.prototype.getBitcoinHexFormat = function () {
+                return Crypto.util.bytesToHex(this.getBitcoinPrivateKeyByteArray()).toString().toUpperCase();
+            };
+
+            // Private Key Base64 Format
+            ECKey.prototype.getBitcoinBase64Format = function () {
+                return Crypto.util.bytesToBase64(this.getBitcoinPrivateKeyByteArray());
+            };
+
+            ECKey.prototype.getBitcoinPrivateKeyByteArray = function () {
+                if (this.priv == null) return null;
+                // Get a copy of private key as a byte array
+                var bytes = this.priv.toByteArrayUnsigned();
+                // zero pad if private key is less than 32 bytes
+                while (bytes.length < 32) bytes.unshift(0x00);
+                return bytes;
+            };
+
+            ECKey.prototype.toString = function (format) {
+                format = format || "";
+                if (format.toString().toLowerCase() == "base64" || format.toString().toLowerCase() == "b64") {
+                    return this.getBitcoinBase64Format();
+                }
+                // Wallet Import Format
+                else if (format.toString().toLowerCase() == "wif") {
+                    return this.getBitcoinWalletImportFormat();
+                } else {
+                    return this.getBitcoinHexFormat();
+                }
+            };
+
+            ECKey.prototype.sign = function (hash) {
+                return ECDSA.sign(hash, this.priv);
+            };
+
+            ECKey.prototype.verify = function (hash, sig) {
+                return ECDSA.verify(hash, sig, this.getPub());
+            };
+
+            /**
+             * Parse a wallet import format private key contained in a string.
+             */
+            ECKey.decodeWalletImportFormat = function (privStr) {
+                var bytes = Bitcoin.Base58.decode(privStr);
+                var hash = bytes.slice(0, 33);
+                var checksum = Crypto.SHA256(Crypto.SHA256(hash, {
+                    asBytes: true
+                }), {
+                    asBytes: true
+                });
+                if (checksum[0] != bytes[33] ||
+                    checksum[1] != bytes[34] ||
+                    checksum[2] != bytes[35] ||
+                    checksum[3] != bytes[36]) {
+                    throw "Checksum validation failed!";
+
+                }
+                var version = hash.shift();
+                /*
+                if (version != ECKey.privateKeyPrefix) {
+                    throw "Version " + version + " not supported!";
+                }
+                */
+                return hash;
+            };
+
+            /**
+             * Parse a compressed wallet import format private key contained in a string.
+             */
+            ECKey.decodeCompressedWalletImportFormat = function (privStr) {
+                var bytes = Bitcoin.Base58.decode(privStr);
+                var hash = bytes.slice(0, 34);
+                var checksum = Crypto.SHA256(Crypto.SHA256(hash, {
+                    asBytes: true
+                }), {
+                    asBytes: true
+                });
+                if (checksum[0] != bytes[34] ||
+                    checksum[1] != bytes[35] ||
+                    checksum[2] != bytes[36] ||
+                    checksum[3] != bytes[37]) {
+                    throw "Checksum validation failed!";
+                }
+                var version = hash.shift();
+                /*
+                if (version != ECKey.privateKeyPrefix) {
+                    throw "Version " + version + " not supported!";
+                }
+                */
+                hash.pop();
+                return hash;
+            };
+
+            // 64 characters [0-9A-F]
+            ECKey.isHexFormat = function (key) {
+                key = key.toString();
+                return /^[A-Fa-f0-9]{64}$/.test(key);
+            };
+
+            // 51 characters base58, always starts with a '5'
+            ECKey.isWalletImportFormat = function (key) {
+                key = key.toString();
+                return (ECKey.privateKeyPrefix == 0x80) ?
+                    (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) :
+                    (/^R[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key));
+            };
+
+            // 52 characters base58
+            ECKey.isCompressedWalletImportFormat = function (key) {
+                key = key.toString();
+                return (ECKey.privateKeyPrefix == 0x80) ?
+                    (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) :
+                    (/^R[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key));
+            };
+
+            // 44 characters
+            ECKey.isBase64Format = function (key) {
+                key = key.toString();
+                return (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key));
+            };
+
+            // 99 characters, 1=1, if using dice convert 6 to 0
+            ECKey.isBase6Format = function (key) {
+                key = key.toString();
+                return (/^[012345]{99}$/.test(key));
+            };
+
+            // 22, 26 or 30 characters, always starts with an 'S'
+            ECKey.isMiniFormat = function (key) {
+                key = key.toString();
+                var validChars22 = /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key);
+                var validChars26 = /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key);
+                var validChars30 = /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key);
+                var testBytes = Crypto.SHA256(key + "?", {
+                    asBytes: true
+                });
+
+                return ((testBytes[0] === 0x00 || testBytes[0] === 0x01) && (validChars22 || validChars26 || validChars30));
+            };
+
+            return ECKey;
+        })();
+        //https://raw.github.com/bitcoinjs/bitcoinjs-lib/09e8c6e184d6501a0c2c59d73ca64db5c0d3eb95/src/util.js
+        // Bitcoin utility functions
+        Bitcoin.Util = {
+            /**
+             * Cross-browser compatibility version of Array.isArray.
+             */
+            isArray: Array.isArray || function (o) {
+                return Object.prototype.toString.call(o) === '[object Array]';
+            },
+            /**
+             * Create an array of a certain length filled with a specific value.
+             */
+            makeFilledArray: function (len, val) {
+                var array = [];
+                var i = 0;
+                while (i < len) {
+                    array[i++] = val;
+                }
+                return array;
+            },
+            /**
+             * Turn an integer into a "var_int".
+             *
+             * "var_int" is a variable length integer used by Bitcoin's binary format.
+             *
+             * Returns a byte array.
+             */
+            numToVarInt: function (i) {
+                if (i < 0xfd) {
+                    // unsigned char
+                    return [i];
+                } else if (i <= 1 << 16) {
+                    // unsigned short (LE)
+                    return [0xfd, i >>> 8, i & 255];
+                } else if (i <= 1 << 32) {
+                    // unsigned int (LE)
+                    return [0xfe].concat(Crypto.util.wordsToBytes([i]));
+                } else {
+                    // unsigned long long (LE)
+                    return [0xff].concat(Crypto.util.wordsToBytes([i >>> 32, i]));
+                }
+            },
+            /**
+             * Parse a Bitcoin value byte array, returning a BigInteger.
+             */
+            valueToBigInt: function (valueBuffer) {
+                if (valueBuffer instanceof BigInteger) return valueBuffer;
+
+                // Prepend zero byte to prevent interpretation as negative integer
+                return BigInteger.fromByteArrayUnsigned(valueBuffer);
+            },
+            /**
+             * Format a Bitcoin value as a string.
+             *
+             * Takes a BigInteger or byte-array and returns that amount of Bitcoins in a
+             * nice standard formatting.
+             *
+             * Examples:
+             * 12.3555
+             * 0.1234
+             * 900.99998888
+             * 34.00
+             */
+            formatValue: function (valueBuffer) {
+                var value = this.valueToBigInt(valueBuffer).toString();
+                var integerPart = value.length > 8 ? value.substr(0, value.length - 8) : '0';
+                var decimalPart = value.length > 8 ? value.substr(value.length - 8) : value;
+                while (decimalPart.length < 8) decimalPart = "0" + decimalPart;
+                decimalPart = decimalPart.replace(/0*$/, '');
+                while (decimalPart.length < 2) decimalPart += "0";
+                return integerPart + "." + decimalPart;
+            },
+            /**
+             * Parse a floating point string as a Bitcoin value.
+             *
+             * Keep in mind that parsing user input is messy. You should always display
+             * the parsed value back to the user to make sure we understood his input
+             * correctly.
+             */
+            parseValue: function (valueString) {
+                // TODO: Detect other number formats (e.g. comma as decimal separator)
+                var valueComp = valueString.split('.');
+                var integralPart = valueComp[0];
+                var fractionalPart = valueComp[1] || "0";
+                while (fractionalPart.length < 8) fractionalPart += "0";
+                fractionalPart = fractionalPart.replace(/^0+/g, '');
+                var value = BigInteger.valueOf(parseInt(integralPart));
+                value = value.multiply(BigInteger.valueOf(100000000));
+                value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
+                return value;
+            },
+            /**
+             * Calculate RIPEMD160(SHA256(data)).
+             *
+             * Takes an arbitrary byte array as inputs and returns the hash as a byte
+             * array.
+             */
+            sha256ripe160: function (data) {
+                return ripemd160(Crypto.SHA256(data, {
+                    asBytes: true
+                }), {
+                    asBytes: true
+                });
+            },
+            // double sha256
+            dsha256: function (data) {
+                return Crypto.SHA256(Crypto.SHA256(data, {
+                    asBytes: true
+                }), {
+                    asBytes: true
+                });
+            },
+            // duck typing method
+            hasMethods: function (obj /*, method list as strings */) {
+                var i = 1,
+                    methodName;
+                while ((methodName = arguments[i++])) {
+                    if (typeof obj[methodName] != 'function') {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+    })();
+
+    //ellipticCurveEncryption.js
+    (function () {
+        (function (ellipticCurveType) {
+
+            //Defining Elliptic Encryption Object  
+            var ellipticEncryption = GLOBAL.ellipticCurveEncryption = function () { };
+
+            ellipticEncryption.rng = new SecureRandom();
+
+            ellipticEncryption.getCurveParameters = function (curveName) {
+
+                //Default is secp256k1
+                curveName = typeof curveName !== 'undefined' ? curveName : "secp256k1";
+
+                var c = EllipticCurve.getSECCurveByName(curveName);
+                var curveDetails = {
+                    Q: "",
+                    A: "",
+                    B: "",
+                    GX: "",
+                    GY: "",
+                    N: ""
+                };
+
+                curveDetails.Q = c.getCurve().getQ().toString();
+                curveDetails.A = c.getCurve().getA().toBigInteger().toString();
+                curveDetails.B = c.getCurve().getB().toBigInteger().toString();
+                curveDetails.GX = c.getG().getX().toBigInteger().toString();
+                curveDetails.GY = c.getG().getY().toBigInteger().toString();
+                curveDetails.N = c.getN().toString();
+
+                return curveDetails;
+
+            }
+
+            ellipticEncryption.selectedCurve = ellipticEncryption.getCurveParameters(ellipticCurveType);
+
+            ellipticEncryption.get_curve = function () {
+                return new EllipticCurve.CurveFp(new BigInteger(this.selectedCurve.Q),
+                    new BigInteger(this.selectedCurve.A),
+                    new BigInteger(this.selectedCurve.B));
+            }
+
+            ellipticEncryption.get_G = function (curve) {
+                return new EllipticCurve.PointFp(curve,
+                    curve.fromBigInteger(new BigInteger(this.selectedCurve.GX)),
+                    curve.fromBigInteger(new BigInteger(this.selectedCurve.GY)));
+            }
+
+            ellipticEncryption.pick_rand = function () {
+                var n = new BigInteger(this.selectedCurve.N);
+                var n1 = n.subtract(BigInteger.ONE);
+                var r = new BigInteger(n.bitLength(), this.rng);
+                return r.mod(n1).add(BigInteger.ONE);
+            }
+
+            ellipticEncryption.senderRandom = function () {
+                var r = this.pick_rand();
+                return r.toString();
+            };
+
+            ellipticEncryption.receiverRandom = function () {
+
+                //This is receivers private key. For now we will use random. CHANGE IT LATER
+                var r = this.pick_rand();
+                return r.toString();
+            }
+
+            ellipticEncryption.senderPublicString = function (senderPrivateKey) {
+
+                var senderKeyECData = {};
+
+                var curve = this.get_curve();
+                var G = this.get_G(curve);
+                var a = new BigInteger(senderPrivateKey);
+                var P = G.multiply(a);
+                senderKeyECData.XValuePublicString = P.getX().toBigInteger().toString();
+                senderKeyECData.YValuePublicString = P.getY().toBigInteger().toString();
+
+                return senderKeyECData;
+            }
+
+            //In real life ellipticEncryption.receiverPublicString is the public key of the receiver.
+            //you don't have to run receiverRandom and the bottom function 
+            ellipticEncryption.receiverPublicString = function (receiverPublicKey) {
+
+                var receiverKeyECData = {};
+
+                var curve = this.get_curve();
+                var G = this.get_G(curve);
+                var a = new BigInteger(receiverPublicKey);
+                var P = G.multiply(a);
+                receiverKeyECData.XValuePublicString = P.getX().toBigInteger().toString();
+                receiverKeyECData.YValuePublicString = P.getY().toBigInteger().toString();
+
+                return receiverKeyECData;
+            }
+
+            ellipticEncryption.senderSharedKeyDerivation = function (receiverPublicStringXValue,
+                receiverPublicStringYValue, senderPrivateKey) {
+
+                var senderDerivedKey = {};
+                var curve = this.get_curve();
+                var P = new EllipticCurve.PointFp(curve,
+                    curve.fromBigInteger(new BigInteger(receiverPublicStringXValue)),
+                    curve.fromBigInteger(new BigInteger(receiverPublicStringYValue)));
+                var a = new BigInteger(senderPrivateKey);
+                var S = P.multiply(a);
+
+                senderDerivedKey.XValue = S.getX().toBigInteger().toString();
+                senderDerivedKey.YValue = S.getY().toBigInteger().toString();
+
+                return senderDerivedKey;
+            }
+
+            ellipticEncryption.receiverSharedKeyDerivation = function (senderPublicStringXValue,
+                senderPublicStringYValue, receiverPrivateKey) {
+
+                var receiverDerivedKey = {};
+                var curve = this.get_curve();
+                var P = new EllipticCurve.PointFp(curve,
+                    curve.fromBigInteger(new BigInteger(senderPublicStringXValue)),
+                    curve.fromBigInteger(new BigInteger(senderPublicStringYValue)));
+                var a = new BigInteger(receiverPrivateKey);
+                var S = P.multiply(a);
+
+                receiverDerivedKey.XValue = S.getX().toBigInteger().toString();
+                receiverDerivedKey.YValue = S.getY().toBigInteger().toString();
+
+                return receiverDerivedKey;
+            }
+
+        })("secp256k1");
+    })();
+
     //sha512.js
     (function () {
         /*
@@ -4582,6 +6797,7 @@
             return {
                 'address': address,
                 'redeemScript': r.redeemScript,
+                'scripthash': Crypto.util.bytesToHex(program),
                 'size': r.size
             };
         }
@@ -4675,15 +6891,16 @@
             };
         }
 
-        coinjs.multisigBech32Address = function (raw_redeemscript) {
-            var program = Crypto.SHA256(Crypto.util.hexToBytes(raw_redeemscript), {
+        coinjs.multisigBech32Address = function (redeemscript) {
+            var program = Crypto.SHA256(Crypto.util.hexToBytes(redeemscript), {
                 asBytes: true
             });
             var address = coinjs.bech32_encode(coinjs.bech32.hrp, [coinjs.bech32.version].concat(coinjs.bech32_convert(program, 8, 5, true)));
             return {
                 'address': address,
                 'type': 'multisigBech32',
-                'redeemscript': Crypto.util.bytesToHex(program)
+                'redeemScript': redeemscript,
+                'scripthash': Crypto.util.bytesToHex(program)
             };
         }
 
@@ -5681,7 +7898,7 @@
                             var n = u.getElementsByTagName("tx_output_n")[0].childNodes[0].nodeValue;
                             var scr = script || u.getElementsByTagName("script")[0].childNodes[0].nodeValue;
 
-                            if (segwit) { //also for MULTISIG_BECH32 (p2wsh-multisig)(script = raw_redeemscript; for p2wsh-multisig)
+                            if (segwit) { //also for MULTISIG_BECH32 (p2wsh-multisig)(script = redeemscript; for p2wsh-multisig)
                                 /* this is a small hack to include the value with the redeemscript to make the signing procedure smoother. 
                                 It is not standard and removed during the signing procedure. */
 
@@ -6994,6 +9211,765 @@
             return r;
         }
 
+    })();
+
+    //secrets.js
+    (function () {
+        //Shamir Secret Share by Alexander Stetsyuk - released under MIT License
+
+        var SecretShare = GLOBAL.shamirSecretShare = {};
+        var defaults = {
+            bits: 8, // default number of bits
+            radix: 16, // work with HEX by default
+            minBits: 3,
+            maxBits: 20, // this permits 1,048,575 shares, though going this high is NOT recommended in JS!
+
+            bytesPerChar: 2,
+            maxBytesPerChar: 6, // Math.pow(256,7) > Math.pow(2,53)
+
+            // Primitive polynomials (in decimal form) for Galois Fields GF(2^n), for 2 <= n <= 30
+            // The index of each term in the array corresponds to the n for that polynomial
+            // i.e. to get the polynomial for n=16, use primitivePolynomials[16]
+            primitivePolynomials: [null, null, 1, 3, 3, 5, 3, 3, 29, 17, 9, 5, 83, 27, 43, 3, 45, 9, 39, 39,
+                9, 5, 3, 33, 27, 9, 71, 39, 9, 5, 83
+            ],
+
+            // warning for insecure PRNG
+            warning: 'WARNING:\nA secure random number generator was not found.\nUsing securedMathRandom(), which is NOT cryptographically strong!'
+        };
+
+        // Protected settings object
+        var config = {};
+
+        /** @expose **/
+        SecretShare.getConfig = function () {
+            return {
+                'bits': config.bits,
+                'unsafePRNG': config.unsafePRNG
+            };
+        };
+
+        function init(bits) {
+            if (bits && (typeof bits !== 'number' || bits % 1 !== 0 || bits < defaults.minBits || bits >
+                defaults.maxBits)) {
+                throw new Error('Number of bits must be an integer between ' + defaults.minBits + ' and ' +
+                    defaults.maxBits + ', inclusive.')
+            }
+
+            config.radix = defaults.radix;
+            config.bits = bits || defaults.bits;
+            config.size = Math.pow(2, config.bits);
+            config.max = config.size - 1;
+
+            // Construct the exp and log tables for multiplication.
+            var logs = [],
+                exps = [],
+                x = 1,
+                primitive = defaults.primitivePolynomials[config.bits];
+            for (var i = 0; i < config.size; i++) {
+                exps[i] = x;
+                logs[x] = i;
+                x <<= 1;
+                if (x >= config.size) {
+                    x ^= primitive;
+                    x &= config.max;
+                }
+            }
+
+            config.logs = logs;
+            config.exps = exps;
+        };
+
+        /** @expose **/
+        SecretShare.init = init;
+
+        function isInited() {
+            if (!config.bits || !config.size || !config.max || !config.logs || !config.exps || config.logs.length !==
+                config.size || config.exps.length !== config.size) {
+                return false;
+            }
+            return true;
+        };
+
+        // Returns a pseudo-random number generator of the form function(bits){}
+        // which should output a random string of 1's and 0's of length `bits`
+        function getRNG() {
+            var randomBits, crypto;
+
+            function construct(bits, arr, radix, size) {
+                var str = '',
+                    i = 0,
+                    len = arr.length - 1;
+                while (i < len || (str.length < bits)) {
+                    str += padLeft(parseInt(arr[i], radix).toString(2), size);
+                    i++;
+                }
+                str = str.substr(-bits);
+                if ((str.match(/0/g) || []).length === str.length) { // all zeros?
+                    return null;
+                } else {
+                    return str;
+                }
+            }
+
+            // node.js crypto.randomBytes()
+            if (typeof require === 'function') {
+                return function (bits) {
+                    var bytes = Math.ceil(bits / 8),
+                        str = null;
+
+                    while (str === null) {
+                        str = construct(bits, require('crypto').randomBytes(bytes).toString('hex'), 16, 4);
+                    }
+                    return str;
+                }
+            }
+
+            // browsers with window.crypto.getRandomValues()
+            if (GLOBAL['crypto'] && typeof GLOBAL['crypto']['getRandomValues'] === 'function' && typeof GLOBAL['Uint32Array'] === 'function') {
+                crypto = GLOBAL['crypto'];
+                return function (bits) {
+                    var elems = Math.ceil(bits / 32),
+                        str = null,
+                        arr = new GLOBAL['Uint32Array'](elems);
+
+                    while (str === null) {
+                        crypto['getRandomValues'](arr);
+                        str = construct(bits, arr, 10, 32);
+                    }
+
+                    return str;
+                }
+            }
+
+            // A totally insecure RNG!!! (except in Safari)
+            // Will produce a warning every time it is called.
+            config.unsafePRNG = true;
+            warn();
+
+            var bitsPerNum = 32;
+            var max = Math.pow(2, bitsPerNum) - 1;
+            return function (bits) {
+                var elems = Math.ceil(bits / bitsPerNum);
+                var arr = [],
+                    str = null;
+                while (str === null) {
+                    for (var i = 0; i < elems; i++) {
+                        arr[i] = Math.floor(securedMathRandom() * max + 1);
+                    }
+                    str = construct(bits, arr, 10, bitsPerNum);
+                }
+                return str;
+            };
+        };
+
+        // Warn about using insecure rng.
+        // Called when securedMathRandom() is being used.
+        function warn() {
+            GLOBAL['console']['warn'](defaults.warning);
+            if (typeof GLOBAL['alert'] === 'function' && config.alert) {
+                GLOBAL['alert'](defaults.warning);
+            }
+        }
+
+        // Set the PRNG to use. If no RNG function is supplied, pick a default using getRNG()
+        /** @expose **/
+        SecretShare.setRNG = function (rng, alert) {
+            if (!isInited()) {
+                this.init();
+            }
+            config.unsafePRNG = false;
+            rng = rng || getRNG();
+
+            // test the RNG (5 times)
+            if (typeof rng !== 'function' || typeof rng(config.bits) !== 'string' || !parseInt(rng(config.bits),
+                2) || rng(config.bits).length > config.bits || rng(config.bits).length < config.bits) {
+                throw new Error(
+                    "Random number generator is invalid. Supply an RNG of the form function(bits){} that returns a string containing 'bits' number of random 1's and 0's."
+                )
+            } else {
+                config.rng = rng;
+            }
+            config.alert = !!alert;
+
+            return !!config.unsafePRNG;
+        };
+
+        function isSetRNG() {
+            return typeof config.rng === 'function';
+        };
+
+        // Generates a random bits-length number string using the PRNG
+        /** @expose **/
+        SecretShare.random = function (bits) {
+            if (!isSetRNG()) {
+                this.setRNG();
+            }
+
+            if (typeof bits !== 'number' || bits % 1 !== 0 || bits < 2) {
+                throw new Error('Number of bits must be an integer greater than 1.')
+            }
+
+            if (config.unsafePRNG) {
+                warn();
+            }
+            return bin2hex(config.rng(bits));
+        }
+
+        // Divides a `secret` number String str expressed in radix `inputRadix` (optional, default 16)
+        // into `numShares` shares, each expressed in radix `outputRadix` (optional, default to `inputRadix`),
+        // requiring `threshold` number of shares to reconstruct the secret.
+        // Optionally, zero-pads the secret to a length that is a multiple of padLength before sharing.
+        /** @expose **/
+        SecretShare.share = function (secret, numShares, threshold, padLength, withoutPrefix) {
+            if (!isInited()) {
+                this.init();
+            }
+            if (!isSetRNG()) {
+                this.setRNG();
+            }
+
+            padLength = padLength || 0;
+
+            if (typeof secret !== 'string') {
+                throw new Error('Secret must be a string.');
+            }
+            if (typeof numShares !== 'number' || numShares % 1 !== 0 || numShares < 2) {
+                throw new Error('Number of shares must be an integer between 2 and 2^bits-1 (' + config.max +
+                    '), inclusive.')
+            }
+            if (numShares > config.max) {
+                var neededBits = Math.ceil(Math.log(numShares + 1) / Math.LN2);
+                throw new Error('Number of shares must be an integer between 2 and 2^bits-1 (' + config.max +
+                    '), inclusive. To create ' + numShares + ' shares, use at least ' + neededBits +
+                    ' bits.')
+            }
+            if (typeof threshold !== 'number' || threshold % 1 !== 0 || threshold < 2) {
+                throw new Error('Threshold number of shares must be an integer between 2 and 2^bits-1 (' +
+                    config.max + '), inclusive.');
+            }
+            if (threshold > config.max) {
+                var neededBits = Math.ceil(Math.log(threshold + 1) / Math.LN2);
+                throw new Error('Threshold number of shares must be an integer between 2 and 2^bits-1 (' +
+                    config.max + '), inclusive.  To use a threshold of ' + threshold +
+                    ', use at least ' + neededBits + ' bits.');
+            }
+            if (typeof padLength !== 'number' || padLength % 1 !== 0) {
+                throw new Error('Zero-pad length must be an integer greater than 1.');
+            }
+
+            if (config.unsafePRNG) {
+                warn();
+            }
+
+            secret = '1' + hex2bin(secret); // append a 1 so that we can preserve the correct number of leading zeros in our secret
+            secret = split(secret, padLength);
+            var x = new Array(numShares),
+                y = new Array(numShares);
+            for (var i = 0, len = secret.length; i < len; i++) {
+                var subShares = this._getShares(secret[i], numShares, threshold);
+                for (var j = 0; j < numShares; j++) {
+                    x[j] = x[j] || subShares[j].x.toString(config.radix);
+                    y[j] = padLeft(subShares[j].y.toString(2)) + (y[j] ? y[j] : '');
+                }
+            }
+            var padding = config.max.toString(config.radix).length;
+            if (withoutPrefix) {
+                for (var i = 0; i < numShares; i++) {
+                    x[i] = bin2hex(y[i]);
+                }
+            } else {
+                for (var i = 0; i < numShares; i++) {
+                    x[i] = config.bits.toString(36).toUpperCase() + padLeft(x[i], padding) + bin2hex(y[i]);
+                }
+            }
+
+            return x;
+        };
+
+        // This is the basic polynomial generation and evaluation function
+        // for a `config.bits`-length secret (NOT an arbitrary length)
+        // Note: no error-checking at this stage! If `secrets` is NOT
+        // a NUMBER less than 2^bits-1, the output will be incorrect!
+        /** @expose **/
+        SecretShare._getShares = function (secret, numShares, threshold) {
+            var shares = [];
+            var coeffs = [secret];
+
+            for (var i = 1; i < threshold; i++) {
+                coeffs[i] = parseInt(config.rng(config.bits), 2);
+            }
+            for (var i = 1, len = numShares + 1; i < len; i++) {
+                shares[i - 1] = {
+                    x: i,
+                    y: horner(i, coeffs)
+                }
+            }
+            return shares;
+        };
+
+        // Polynomial evaluation at `x` using Horner's Method
+        // TODO: this can possibly be sped up using other methods
+        // NOTE: fx=fx * x + coeff[i] ->  exp(log(fx) + log(x)) + coeff[i],
+        //       so if fx===0, just set fx to coeff[i] because
+        //       using the exp/log form will result in incorrect value
+        function horner(x, coeffs) {
+            var logx = config.logs[x];
+            var fx = 0;
+            for (var i = coeffs.length - 1; i >= 0; i--) {
+                if (fx === 0) {
+                    fx = coeffs[i];
+                    continue;
+                }
+                fx = config.exps[(logx + config.logs[fx]) % config.max] ^ coeffs[i];
+            }
+            return fx;
+        };
+
+        function inArray(arr, val) {
+            for (var i = 0, len = arr.length; i < len; i++) {
+                if (arr[i] === val) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        function processShare(share) {
+
+            var bits = parseInt(share[0], 36);
+            if (bits && (typeof bits !== 'number' || bits % 1 !== 0 || bits < defaults.minBits || bits >
+                defaults.maxBits)) {
+                throw new Error('Number of bits must be an integer between ' + defaults.minBits + ' and ' +
+                    defaults.maxBits + ', inclusive.')
+            }
+
+            var max = Math.pow(2, bits) - 1;
+            var idLength = max.toString(config.radix).length;
+
+            var id = parseInt(share.substr(1, idLength), config.radix);
+            if (typeof id !== 'number' || id % 1 !== 0 || id < 1 || id > max) {
+                throw new Error('Share id must be an integer between 1 and ' + config.max + ', inclusive.');
+            }
+            share = share.substr(idLength + 1);
+            if (!share.length) {
+                throw new Error('Invalid share: zero-length share.')
+            }
+            return {
+                'bits': bits,
+                'id': id,
+                'value': share
+            };
+        };
+
+        /** @expose **/
+        SecretShare._processShare = processShare;
+
+        // Protected method that evaluates the Lagrange interpolation
+        // polynomial at x=`at` for individual config.bits-length
+        // segments of each share in the `shares` Array.
+        // Each share is expressed in base `inputRadix`. The output
+        // is expressed in base `outputRadix'
+        function combine(at, shares) {
+            var setBits, share, x = [],
+                y = [],
+                result = '',
+                idx;
+
+            for (var i = 0, len = shares.length; i < len; i++) {
+                share = processShare(shares[i]);
+                if (typeof setBits === 'undefined') {
+                    setBits = share['bits'];
+                } else if (share['bits'] !== setBits) {
+                    throw new Error('Mismatched shares: Different bit settings.')
+                }
+
+                if (config.bits !== setBits) {
+                    init(setBits);
+                }
+
+                if (inArray(x, share['id'])) { // repeated x value?
+                    continue;
+                }
+
+                idx = x.push(share['id']) - 1;
+                share = split(hex2bin(share['value']));
+                for (var j = 0, len2 = share.length; j < len2; j++) {
+                    y[j] = y[j] || [];
+                    y[j][idx] = share[j];
+                }
+            }
+
+            for (var i = 0, len = y.length; i < len; i++) {
+                result = padLeft(lagrange(at, x, y[i]).toString(2)) + result;
+            }
+
+            if (at === 0) { // reconstructing the secret
+                var idx = result.indexOf('1'); //find the first 1
+                return bin2hex(result.slice(idx + 1));
+            } else { // generating a new share
+                return bin2hex(result);
+            }
+        };
+
+        // Combine `shares` Array into the original secret
+        /** @expose **/
+        SecretShare.combine = function (shares) {
+            return combine(0, shares);
+        };
+
+        // Generate a new share with id `id` (a number between 1 and 2^bits-1)
+        // `id` can be a Number or a String in the default radix (16)
+        /** @expose **/
+        SecretShare.newShare = function (id, shares) {
+            if (typeof id === 'string') {
+                id = parseInt(id, config.radix);
+            }
+
+            var share = processShare(shares[0]);
+            var max = Math.pow(2, share['bits']) - 1;
+
+            if (typeof id !== 'number' || id % 1 !== 0 || id < 1 || id > max) {
+                throw new Error('Share id must be an integer between 1 and ' + config.max + ', inclusive.');
+            }
+
+            var padding = max.toString(config.radix).length;
+            return config.bits.toString(36).toUpperCase() + padLeft(id.toString(config.radix), padding) +
+                combine(id, shares);
+        };
+
+        // Evaluate the Lagrange interpolation polynomial at x = `at`
+        // using x and y Arrays that are of the same length, with
+        // corresponding elements constituting points on the polynomial.
+        function lagrange(at, x, y) {
+            var sum = 0,
+                product,
+                i, j;
+
+            for (var i = 0, len = x.length; i < len; i++) {
+                if (!y[i]) {
+                    continue;
+                }
+
+                product = config.logs[y[i]];
+                for (var j = 0; j < len; j++) {
+                    if (i === j) {
+                        continue;
+                    }
+                    if (at === x[j]) { // happens when computing a share that is in the list of shares used to compute it
+                        product = -1; // fix for a zero product term, after which the sum should be sum^0 = sum, not sum^1
+                        break;
+                    }
+                    product = (product + config.logs[at ^ x[j]] - config.logs[x[i] ^ x[j]] + config.max /* to make sure it's not negative */) %
+                        config.max;
+                }
+
+                sum = product === -1 ? sum : sum ^ config.exps[product]; // though exps[-1]= undefined and undefined ^ anything = anything in chrome, this behavior may not hold everywhere, so do the check
+            }
+            return sum;
+        };
+
+        /** @expose **/
+        SecretShare._lagrange = lagrange;
+
+        // Splits a number string `bits`-length segments, after first
+        // optionally zero-padding it to a length that is a multiple of `padLength.
+        // Returns array of integers (each less than 2^bits-1), with each element
+        // representing a `bits`-length segment of the input string from right to left,
+        // i.e. parts[0] represents the right-most `bits`-length segment of the input string.
+        function split(str, padLength) {
+            if (padLength) {
+                str = padLeft(str, padLength)
+            }
+            var parts = [];
+            for (var i = str.length; i > config.bits; i -= config.bits) {
+                parts.push(parseInt(str.slice(i - config.bits, i), 2));
+            }
+            parts.push(parseInt(str.slice(0, i), 2));
+            return parts;
+        };
+
+        // Pads a string `str` with zeros on the left so that its length is a multiple of `bits`
+        function padLeft(str, bits) {
+            bits = bits || config.bits
+            var missing = str.length % bits;
+            return (missing ? new Array(bits - missing + 1).join('0') : '') + str;
+        };
+
+        function hex2bin(str) {
+            var bin = '',
+                num;
+            for (var i = str.length - 1; i >= 0; i--) {
+                num = parseInt(str[i], 16)
+                if (isNaN(num)) {
+                    throw new Error('Invalid hex character.')
+                }
+                bin = padLeft(num.toString(2), 4) + bin;
+            }
+            return bin;
+        }
+
+        function bin2hex(str) {
+            var hex = '',
+                num;
+            str = padLeft(str, 4);
+            for (var i = str.length; i >= 4; i -= 4) {
+                num = parseInt(str.slice(i - 4, i), 2);
+                if (isNaN(num)) {
+                    throw new Error('Invalid binary character.')
+                }
+                hex = num.toString(16) + hex;
+            }
+            return hex;
+        }
+
+        // Converts a given UTF16 character string to the HEX representation.
+        // Each character of the input string is represented by
+        // `bytesPerChar` bytes in the output string.
+        /** @expose **/
+        SecretShare.str2hex = function (str, bytesPerChar) {
+            if (typeof str !== 'string') {
+                throw new Error('Input must be a character string.');
+            }
+            bytesPerChar = bytesPerChar || defaults.bytesPerChar;
+
+            if (typeof bytesPerChar !== 'number' || bytesPerChar % 1 !== 0 || bytesPerChar < 1 ||
+                bytesPerChar > defaults.maxBytesPerChar) {
+                throw new Error('Bytes per character must be an integer between 1 and ' + defaults.maxBytesPerChar +
+                    ', inclusive.')
+            }
+
+            var hexChars = 2 * bytesPerChar;
+            var max = Math.pow(16, hexChars) - 1;
+            var out = '',
+                num;
+            for (var i = 0, len = str.length; i < len; i++) {
+                num = str[i].charCodeAt();
+                if (isNaN(num)) {
+                    throw new Error('Invalid character: ' + str[i]);
+                } else if (num > max) {
+                    var neededBytes = Math.ceil(Math.log(num + 1) / Math.log(256));
+                    throw new Error('Invalid character code (' + num +
+                        '). Maximum allowable is 256^bytes-1 (' + max +
+                        '). To convert this character, use at least ' + neededBytes + ' bytes.')
+                } else {
+                    out = padLeft(num.toString(16), hexChars) + out;
+                }
+            }
+            return out;
+        };
+
+        // Converts a given HEX number string to a UTF16 character string.
+        /** @expose **/
+        SecretShare.hex2str = function (str, bytesPerChar) {
+            if (typeof str !== 'string') {
+                throw new Error('Input must be a hexadecimal string.');
+            }
+            bytesPerChar = bytesPerChar || defaults.bytesPerChar;
+
+            if (typeof bytesPerChar !== 'number' || bytesPerChar % 1 !== 0 || bytesPerChar < 1 ||
+                bytesPerChar > defaults.maxBytesPerChar) {
+                throw new Error('Bytes per character must be an integer between 1 and ' + defaults.maxBytesPerChar +
+                    ', inclusive.')
+            }
+
+            var hexChars = 2 * bytesPerChar;
+            var out = '';
+            str = padLeft(str, hexChars);
+            for (var i = 0, len = str.length; i < len; i += hexChars) {
+                out = String.fromCharCode(parseInt(str.slice(i, i + hexChars), 16)) + out;
+            }
+            return out;
+        };
+
+        // by default, initialize without an RNG
+        SecretShare.init();
+    })();
+
+    //kbucket.js
+    (function () {
+        // Kademlia DHT K-bucket implementation as a binary tree.
+        // by 'Tristan Slominski' under 'MIT License'
+        GLOBAL.BuildKBucket = function KBucket(options = {}) {
+            if (!(this instanceof KBucket))
+                return new KBucket(options);
+            this.localNodeId = options.localNodeId || getRandomBytes(new Uint8Array(20))
+            this.numberOfNodesPerKBucket = options.numberOfNodesPerKBucket || 20
+            this.numberOfNodesToPing = options.numberOfNodesToPing || 3
+            this.distance = options.distance || this.distance
+            this.arbiter = options.arbiter || this.arbiter
+            this.metadata = Object.assign({}, options.metadata)
+
+            this.createNode = function () {
+                return {
+                    contacts: [],
+                    dontSplit: false,
+                    left: null,
+                    right: null
+                }
+            }
+
+            this.ensureInt8 = function (name, val) {
+                if (!(val instanceof Uint8Array))
+                    throw new TypeError(name + ' is not a Uint8Array')
+            }
+
+            this.arrayEquals = function (array1, array2) {
+                if (array1 === array2)
+                    return true
+                if (array1.length !== array2.length)
+                    return false
+                for (let i = 0, length = array1.length; i < length; ++i)
+                    if (array1[i] !== array2[i])
+                        return false
+                return true
+            }
+
+            this.ensureInt8('option.localNodeId as parameter 1', this.localNodeId)
+            this.root = this.createNode()
+
+            this.arbiter = function (incumbent, candidate) {
+                return incumbent.vectorClock > candidate.vectorClock ? incumbent : candidate
+            }
+
+            this.distance = function (firstId, secondId) {
+                let distance = 0
+                let i = 0
+                const min = Math.min(firstId.length, secondId.length)
+                const max = Math.max(firstId.length, secondId.length)
+                for (; i < min; ++i)
+                    distance = distance * 256 + (firstId[i] ^ secondId[i])
+                for (; i < max; ++i) distance = distance * 256 + 255
+                return distance
+            }
+
+            this.add = function (contact) {
+                this.ensureInt8('contact.id', (contact || {}).id)
+                let bitIndex = 0
+                let node = this.root
+                while (node.contacts === null)
+                    node = this._determineNode(node, contact.id, bitIndex++)
+                const index = this._indexOf(node, contact.id)
+                if (index >= 0) {
+                    this._update(node, index, contact)
+                    return this
+                }
+                if (node.contacts.length < this.numberOfNodesPerKBucket) {
+                    node.contacts.push(contact)
+                    return this
+                }
+                if (node.dontSplit)
+                    return this
+                this._split(node, bitIndex)
+                return this.add(contact)
+            }
+
+            this.closest = function (id, n = Infinity) {
+                this.ensureInt8('id', id)
+                if ((!Number.isInteger(n) && n !== Infinity) || n <= 0)
+                    throw new TypeError('n is not positive number')
+                let contacts = []
+                for (let nodes = [this.root], bitIndex = 0; nodes.length > 0 && contacts.length < n;) {
+                    const node = nodes.pop()
+                    if (node.contacts === null) {
+                        const detNode = this._determineNode(node, id, bitIndex++)
+                        nodes.push(node.left === detNode ? node.right : node.left)
+                        nodes.push(detNode)
+                    } else
+                        contacts = contacts.concat(node.contacts)
+                }
+                return contacts
+                    .map(a => [this.distance(a.id, id), a])
+                    .sort((a, b) => a[0] - b[0])
+                    .slice(0, n)
+                    .map(a => a[1])
+            }
+
+            this.count = function () {
+                let count = 0
+                for (const nodes = [this.root]; nodes.length > 0;) {
+                    const node = nodes.pop()
+                    if (node.contacts === null)
+                        nodes.push(node.right, node.left)
+                    else
+                        count += node.contacts.length
+                }
+                return count
+            }
+
+            this._determineNode = function (node, id, bitIndex) {
+                const bytesDescribedByBitIndex = bitIndex >> 3
+                const bitIndexWithinByte = bitIndex % 8
+                if ((id.length <= bytesDescribedByBitIndex) && (bitIndexWithinByte !== 0))
+                    return node.left
+                const byteUnderConsideration = id[bytesDescribedByBitIndex]
+                if (byteUnderConsideration & (1 << (7 - bitIndexWithinByte)))
+                    return node.right
+                return node.left
+            }
+
+            this.get = function (id) {
+                this.ensureInt8('id', id)
+                let bitIndex = 0
+                let node = this.root
+                while (node.contacts === null)
+                    node = this._determineNode(node, id, bitIndex++)
+                const index = this._indexOf(node, id)
+                return index >= 0 ? node.contacts[index] : null
+            }
+
+            this._indexOf = function (node, id) {
+                for (let i = 0; i < node.contacts.length; ++i)
+                    if (this.arrayEquals(node.contacts[i].id, id))
+                        return i
+                return -1
+            }
+
+            this.remove = function (id) {
+                this.ensureInt8('the id as parameter 1', id)
+                let bitIndex = 0
+                let node = this.root
+                while (node.contacts === null)
+                    node = this._determineNode(node, id, bitIndex++)
+                const index = this._indexOf(node, id)
+                if (index >= 0)
+                    node.contacts.splice(index, 1)[0]
+                return this
+            }
+
+            this._split = function (node, bitIndex) {
+                node.left = this.createNode()
+                node.right = this.createNode()
+                for (const contact of node.contacts)
+                    this._determineNode(node, contact.id, bitIndex).contacts.push(contact)
+                node.contacts = null
+                const detNode = this._determineNode(node, this.localNodeId, bitIndex)
+                const otherNode = node.left === detNode ? node.right : node.left
+                otherNode.dontSplit = true
+            }
+
+            this.toArray = function () {
+                let result = []
+                for (const nodes = [this.root]; nodes.length > 0;) {
+                    const node = nodes.pop()
+                    if (node.contacts === null)
+                        nodes.push(node.right, node.left)
+                    else
+                        result = result.concat(node.contacts)
+                }
+                return result
+            }
+
+            this._update = function (node, index, contact) {
+                if (!this.arrayEquals(node.contacts[index].id, contact.id))
+                    throw new Error('wrong index for _update')
+                const incumbent = node.contacts[index]
+                const selection = this.arbiter(incumbent, contact)
+                if (selection === incumbent && incumbent !== contact) return
+                node.contacts.splice(index, 1)
+                node.contacts.push(selection)
+            }
+        }
     })();
 
 })(typeof global !== "undefined" ? global : window);
