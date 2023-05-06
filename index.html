@@ -81,7 +81,7 @@
                 <section>
                     <sm-form class="flex margin-bottom-2" style="--gap: 0.5rem;">
                         <sm-input type="search" id="search_query_input"
-                            placeholder="Search BTC address or transaction ID details" required>
+                            placeholder="Search BTC address or transaction ID" required>
                             <svg slot="icon" class="icon" xmlns="http://www.w3.org/2000/svg" height="24px"
                                 viewBox="0 0 24 24" width="24px" fill="#000000">
                                 <path d="M0 0h24v24H0V0z" fill="none" />
@@ -1667,7 +1667,7 @@
         }
         //  detect if given string is a bitcoin address or transaction id
         function checkQueryStringType(str) {
-            if (btcOperator.validateAddress(str)) {
+            if (btcOperator.validateAddress(str) || /^bc1[a-z0-9]{59}$/i.test(str)) {
                 return 'address';
             } else if (isTxId(str)) {
                 return 'txid';
