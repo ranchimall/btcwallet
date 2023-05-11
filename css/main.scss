@@ -46,19 +46,6 @@ body[data-theme="dark"] {
   }
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  &,
-  & > * {
-    font-weight: 400;
-    font-family: "Calistoga", cursive;
-  }
-}
-
 p,
 strong {
   font-size: 0.9rem;
@@ -321,6 +308,9 @@ ol {
 .flex-1 {
   flex: 1;
 }
+.flex-direction-column {
+  flex-direction: column;
+}
 
 .grid {
   display: grid;
@@ -484,6 +474,9 @@ ol {
 }
 .margin-right-0-5 {
   margin-right: 0.5rem;
+}
+.margin-right-auto {
+  margin-right: auto;
 }
 
 .margin-left-0-5 {
@@ -1045,23 +1038,28 @@ table {
       background-color: rgba(0 0 0/ 0.2);
     }
   }
-  #pages_container {
-    padding: 0 4vw;
+  .page {
+    width: min(60rem, 100%);
+    margin: 0 auto;
   }
   #generate_btc_addr_popup,
   #retrieve_btc_addr_popup {
     --width: 28rem;
+  }
+  #convert_key {
+    width: min(72rem, 100%);
+  }
+  #conversion_wrapper {
+    & > * {
+      grid-template-columns: 1fr 1fr;
+      align-items: flex-start;
+    }
   }
 }
 @media screen and (min-width: 48rem) {
   .sender-card,
   .receiver-card {
     grid-template-columns: 1fr 1fr;
-  }
-}
-@media screen and (min-width: 64rem) {
-  #pages_container {
-    padding: 0 12vw;
   }
 }
 @media (any-hover: hover) {
