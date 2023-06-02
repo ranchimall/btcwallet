@@ -1259,14 +1259,25 @@
                 return html.node`
                     <li class="${className}" data-txid="${txid}" data-transacting-addresses=${transactingAddresses.slice(2)}>
                         <div class="transaction__icon">${icon}</div>
-                        <time class="transaction__time">${getFormattedTime(time)}</time>
-                        <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(getConvertedAmount(amount))}</div>
-                        <div class="transaction__receiver">
-                            ${transactionReceiver}
-                            ${transactingAddresses.length > 2 ? html`<button onclick=${showAllAddresses} class="button button--small show-more" title="See all addresses">... +${transactingAddresses.length - 2} more</button>` : ''}
+                        <div class="grid gap-0-5">
+                            <div class="flex gap-0-5 space-between align-center flex-wrap">
+                                <time class="transaction__time">${getFormattedTime(time)}</time>
+                                <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(getConvertedAmount(amount))}</div>
+                            </div>
+                            <div class="transaction__receiver">
+                                ${transactionReceiver}
+                                ${transactingAddresses.length > 2 ? html`<button onclick=${showAllAddresses} class="button button--small show-more" title="See all addresses">... +${transactingAddresses.length - 2} more</button>` : ''}
+                            </div>
+                            <div class="flex gap-0-5 flex-wrap align-center">
+                                <a class="button button--small gap-0-3 align-center button--colored transaction__id" href="${`#/check_details?query=${txid}`}">
+                                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                                    View details
+                                </a>
+                            </div>
+                            ${!block ? html`
+                                <p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>
+                            ` : ''}
                         </div>
-                        <div class="transaction__id wrap-around">TXID: <a href="${`#/check_details?query=${txid}`}">${txid}</a></div>
-                        ${!block ? html`<p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>` : ''}
                     </li>
                     `;
             },
@@ -1318,8 +1329,6 @@
                 }
                 txDetailsAbortController = new AbortController();
                 btcOperator.getTx(txid).then(result => {
-
-
                     const { block, time, size, fee, inputs, outputs, confirmations, total_input_value, total_output_value } = result;
 
                     console.debug('tx', result);
@@ -1392,7 +1401,7 @@
                             </div>
                             `)
                 }).catch(err => {
-                    notify(err, 'error')
+                    notify('Invalid transaction ID', 'error')
                     renderElem(getRef('tx_details'), html``)
                 })
             },
