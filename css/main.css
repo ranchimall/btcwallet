@@ -248,6 +248,10 @@ sm-chip[selected] {
   --background: var(--accent-color);
 }
 
+sm-notifications {
+  z-index: 100000;
+}
+
 ul,
 ol {
   list-style: none;
@@ -1048,6 +1052,13 @@ table tr:nth-child(even) {
     transform: scale(1) translateY(0);
   }
 }
+.increase-fee-sender,
+.increase-fee-receiver {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: solid thin rgba(var(--text-color), 0.3);
+}
+
 @media screen and (max-width: 40rem) {
   #main_navbar.hide-away {
     bottom: 0;
@@ -1119,6 +1130,9 @@ table tr:nth-child(even) {
   #conversion_wrapper > * {
     grid-template-columns: 1fr 1fr;
     align-items: flex-start;
+  }
+  #increase_fee_popup {
+    --width: 30rem;
   }
 }
 @media screen and (min-width: 48rem) {

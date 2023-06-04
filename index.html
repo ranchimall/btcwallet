@@ -135,7 +135,7 @@
                             <span>Total balance:</span>
                             <output id="total_balance" class="amount-shown" style="margin-left: 0.3rem;"></output>
                         </div>
-                        <button id="add_sender" class=" button--small">
+                        <button id="add_sender" class=" button--small" onclick="addSenderInput()">
                             <svg class="icon margin-right-0-5" xmlns="http://www.w3.org/2000/svg" height="24px"
                                 viewBox="0 0 24 24" width="24px" fill="#000000">
                                 <path d="M0 0h24v24H0V0z" fill="none" />
@@ -147,7 +147,7 @@
                     <div>
                         <h3 class="margin-bottom-0-5">Receivers</h3>
                         <div id="receiver_container"></div>
-                        <button id="add_receiver" class=" button--small">
+                        <button id="add_receiver" class=" button--small" onclick="addReceiverInput()">
                             <svg class="icon margin-right-0-5" xmlns="http://www.w3.org/2000/svg" height="24px"
                                 viewBox="0 0 24 24" width="24px" fill="#000000">
                                 <path d="M0 0h24v24H0V0z" fill="none" />
@@ -448,6 +448,22 @@
             </sm-form>
         </section>
     </sm-popup>
+    <sm-popup id="increase_fee_popup">
+        <header slot="header" class="popup__header">
+            <div class="flex align-center">
+                <button class="popup__header__close" onclick="closePopup()">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"
+                        fill="#000000">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                    </svg>
+                </button>
+                <h3>Increase fee</h3>
+            </div>
+        </header>
+        <div id="increase_fee_popup_content"></div>
+    </sm-popup>
     <sm-popup id="txid_popup">
         <header slot="header" class="popup__header">
             <div class="flex align-center">
@@ -634,8 +650,6 @@
 
         document.addEventListener('popupopened', e => {
             switch (e.target.id) {
-                case 'edit_sections_popup':
-                    break;
             }
         })
         document.addEventListener('popupclosed', e => {
@@ -643,6 +657,9 @@
             switch (e.target.id) {
                 case 'retrieve_btc_addr_popup':
                     getRef('recovered_btc_addr_wrapper').classList.add('hidden')
+                    break;
+                case 'increase_fee_popup':
+                    renderElem(getRef('increase_fee_popup_content'), html``)
                     break;
             }
         })
@@ -737,7 +754,7 @@
             return M.join(' ');
         }
         window.addEventListener('hashchange', e => routeTo(window.location.hash))
-        let selectedCurrency
+        let selectedCurrency = 'btc'
         window.addEventListener("load", () => {
             const [browserName, browserVersion] = detectBrowser().split(' ');
             const supportedVersions = {
@@ -771,7 +788,9 @@
             getExchangeRate()
                 .then(() => {
                     selectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc'
-                    getRef('currency_selector').value = selectedCurrency
+                    setTimeout(() => {
+                        document.getElementById('currency_selector').value = selectedCurrency
+                    }, 100)
                 })
                 .catch(e => {
                     selectedCurrency = 'btc'
@@ -791,9 +810,9 @@
                             getRef('loading_page').remove()
                         }
                     }, 500);
+                    addSenderInput()
+                    addReceiverInput()
                     document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[selectedCurrency])
-                    getRef('add_sender').click();
-                    getRef('add_receiver').click();
                 })
 
         });
@@ -1103,7 +1122,7 @@
         }
 
         function buttonLoader(id, show) {
-            const button = typeof id === 'string' ? getRef(id) : id;
+            const button = typeof id === 'string' ? document.getElementById(id) : id;
             button.disabled = show;
             const animOptions = {
                 duration: 200,
@@ -1111,6 +1130,7 @@
                 easing: 'ease'
             }
             if (show) {
+                button.parentNode.append(createElement('sm-spinner'))
                 button.animate([
                     {
                         clipPath: 'circle(100%)',
@@ -1118,13 +1138,9 @@
                     {
                         clipPath: 'circle(0)',
                     },
-                ], animOptions).onfinish = e => {
-                    e.target.commitStyles()
-                    e.target.cancel()
-                }
-                button.parentNode.append(createElement('sm-spinner'))
+                ], animOptions)
             } else {
-                button.style = ''
+                button.getAnimations().forEach(anim => anim.cancel())
                 const potentialTarget = button.parentNode.querySelector('sm-spinner')
                 if (potentialTarget) potentialTarget.remove();
             }
@@ -1273,6 +1289,14 @@
                                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
                                     View details
                                 </a>
+                                ${!block ? html`
+                                    <div class="multi-state-button">
+                                        <button class="button button--small gap-0-3" onclick=${initFeeChange} title="Resend transaction with greater fees to reduce processing time">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
+                                            Increase fee
+                                        </button>
+                                    </div>
+                                ` : ''}
                             </div>
                             ${!block ? html`
                                 <p class="pending-badge">Confirmation pending: amount will be deducted after transaction is confirmed</p>
@@ -1438,10 +1462,9 @@
             if (typeof amount === 'string') {
                 amount = parseFloat(amount)
             }
-            const currency = getRef('currency_selector').value;
             if (!amount)
                 return '0';
-            return amount.toLocaleString(currency === 'inr' ? `en-IN` : 'en-US', { style: 'currency', currency, maximumFractionDigits: currency === 'btc' ? 8 : 2 })
+            return amount.toLocaleString(selectedCurrency === 'inr' ? `en-IN` : 'en-US', { style: 'currency', currency: selectedCurrency, maximumFractionDigits: selectedCurrency === 'btc' ? 8 : 2 })
         }
         let globalExchangeRate = {}
         async function getExchangeRate() {
@@ -1462,8 +1485,8 @@
             if (typeof amount === 'string') {
                 amount = parseFloat(amount)
             }
-            if (globalExchangeRate[getRef('currency_selector').value])
-                return parseFloat((amount * globalExchangeRate[getRef('currency_selector').value]).toFixed(8))
+            if (globalExchangeRate[selectedCurrency])
+                return parseFloat((amount * globalExchangeRate[selectedCurrency]).toFixed(8))
             else return amount
         }
         function roundUp(amount, precision = 2) {
@@ -1648,13 +1671,16 @@
         txParticipantsObserver.observe(getRef('receiver_container'), {
             childList: true
         })
-        getRef('add_sender').onclick = evt => {
+        function addSenderInput(address) {
             let senderCard = getRef('sender_template').content.cloneNode(true)
             if (!getRef('sender_container').children.length) {
                 senderCard.querySelector('.remove-card').remove()
             }
             getRef('sender_container').appendChild(senderCard);
             getRef('sender_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
+            if (address) {
+                getRef('sender_container').lastElementChild.querySelector('.sender-input').value = address
+            }
         }
         getRef('send_tx').addEventListener('click', e => {
             if (e.target.closest('.remove-card')) {
@@ -1688,16 +1714,22 @@
                 getRef("total_balance").innerHTML = '';
             })
         }
-        getRef('add_receiver').onclick = evt => {
+
+        function addReceiverInput(address, value) {
             let receiverCard = getRef('receiver_template').content.cloneNode(true)
             if (!getRef('receiver_container').children.length) {
                 receiverCard.querySelector('.remove-card').remove()
             }
-            receiverCard.querySelector('.currency-symbol') ? receiverCard.querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value] : null;
+            receiverCard.querySelector('.currency-symbol') ? receiverCard.querySelector('.currency-symbol').innerHTML = currencyIcons[selectedCurrency] : null;
             getRef('receiver_container').appendChild(receiverCard);
             getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
+            if (address) {
+                getRef('receiver_container').lastElementChild.querySelector('.receiver-input').value = address
+            }
+            if (value) {
+                getRef('receiver_container').lastElementChild.querySelector('.amount-input').value = getConvertedAmount(value)
+            }
         }
-
         getRef('fees_selector').addEventListener('change', renderFeesUI)
         function renderFeesUI() {
             switch (getRef('fees_selector').value) {
@@ -1710,7 +1742,7 @@
                         </sm-input>
                     `)
                     document.getElementById('send_fee').focusIn();
-                    getRef('fees_wrapper').querySelector('.currency-symbol').innerHTML = currencyIcons[getRef('currency_selector').value];
+                    getRef('fees_wrapper').querySelector('.currency-symbol').innerHTML = currencyIcons[selectedCurrency];
                     getRef('fees_section').classList.remove('hidden')
                     renderElem(getRef('error_section'), html``)
                     break;
@@ -1744,7 +1776,7 @@
             const privKeys = [...getRef('sender_container').querySelectorAll('.priv-key-input')].map(input => input.value.trim());
             const receivers = [...getRef('receiver_container').querySelectorAll('.receiver-input')].map(input => input.value.trim());
             const amounts = [...getRef('receiver_container').querySelectorAll('.amount-input')].map(input => {
-                return parseFloat(input.value.trim()) / (globalExchangeRate[getRef('currency_selector').value] || 1)
+                return parseFloat(input.value.trim()) / (globalExchangeRate[selectedCurrency] || 1)
             });
             console.debug(senders, receivers, amounts); //for automatic fee calc, set fee = null
             return [senders, privKeys, receivers, amounts]
@@ -1828,7 +1860,7 @@
                     buttonLoader('send_transaction', false)
                     return;
                 }
-                fee = parseFloat((parseFloat(feeInput) / (globalExchangeRate[getRef('currency_selector').value] || 1)).toFixed(8));
+                fee = parseFloat((parseFloat(feeInput) / (globalExchangeRate[selectedCurrency] || 1)).toFixed(8));
             }
             btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
                 console.log(txid);
@@ -1873,6 +1905,112 @@
             e.target.closest('button').remove()
         }
 
+        let changingFeeOf = null
+        function initFeeChange(e) {
+            const button = e.target.closest('button')
+            buttonLoader(button, true)
+            const txid = button.closest('li').dataset.txid
+            changingFeeOf = txid
+            btcOperator.getTx(txid).then(async details => {
+                const { inputs, outputs, fee } = details
+                const senders = inputs.map(input => input.address)
+                const receivers = outputs.map(output => output.address)
+                const amounts = outputs.map(output => 0.00000001)
+                let recommendedFee = 0
+                try {
+                    const { fee } = await btcOperator.createTx(senders, receivers, amounts)
+                    recommendedFee = fee
+                } catch (e) {
+                    console.error(e)
+                }
+                renderElem(getRef('increase_fee_popup_content'), html`
+                    <sm-form style="--gap: 2rem">
+                        <div class="grid gap-0-5">
+                            <h4>Senders</h4>
+                            <ul class="grid gap-0-5">
+                                ${inputs.map(input => html.node`<li class="increase-fee-sender grid gap-1">
+                                    <div>
+                                        <div class="label">Address</div>
+                                        <b class="sender__address wrap-around">${input.address}</b>
+                                    </div>
+                                    <sm-input class="sender__private-key password-field" type="password" placeholder="Private Key" error-text="Invalid private key" animate="" required="" aria-label="Private Key" aria-required="true" role="textbox">
+                                        <svg class="icon" slot="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <g> <rect fill="none" height="24" width="24"></rect> </g> <g> <path d="M21,10h-8.35C11.83,7.67,9.61,6,7,6c-3.31,0-6,2.69-6,6s2.69,6,6,6c2.61,0,4.83-1.67,5.65-4H13l2,2l2-2l2,2l4-4.04L21,10z M7,15c-1.65,0-3-1.35-3-3c0-1.65,1.35-3,3-3s3,1.35,3,3C10,13.65,8.65,15,7,15z"></path> </g> </svg>
+                                        <label slot="right" class="interact">
+                                            <input type="checkbox" class="hidden" autocomplete="off" readonly="" onchange="togglePrivateKeyVisibility(this)">
+                                            <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Hide password</title> <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none"></path> <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"></path> </svg>
+                                            <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Show password</title> <path d="M0 0h24v24H0z" fill="none"></path> <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path> </svg>
+                                        </label>
+                                    </sm-input>
+                                </li>`)}
+                            </ul>
+                        </div>
+                        <div class="grid gap-0-5">
+                            <h4>Receivers</h4>
+                            <ul class="grid gap-0-5">
+                                ${outputs.map(output => html.node`<li class="increase-fee-receiver grid gap-1">
+                                    <div>
+                                        <div class="label">Address</div>
+                                        <b class="wrap-around">${output.address}</b>
+                                    </div>
+                                    <div>
+                                        <div class="label">Amount</div>
+                                        <b>${formatAmount(getConvertedAmount(output.value))}</b>
+                                    </div>
+                                </li>`)}
+                            </ul>
+                        </div>
+                        <div class="grid gap-0-5">
+                            <p>
+                                Previous fee: <b>${formatAmount(getConvertedAmount(fee))}</b> ${recommendedFee ? html`| Recommended fee: <b>${formatAmount(getConvertedAmount(recommendedFee))}</b>` : ''}
+                            </p>
+                            <sm-input id="new_fee" placeholder="New fee" type="number" min=${getConvertedAmount(fee)} step="0.00000001" error-text=${`New fee should be greater than ${formatAmount(getConvertedAmount(fee))}`} animate required>
+                                <div class="currency-symbol flex" slot="icon"> </div>
+                            </sm-input>
+                        </div>
+                        <div class="multi-state-button">
+                            <button id="increase_fee" class="button button--primary" onclick=${increaseFee} type="submit">Increase fee</button>
+                        </div>
+                    </sm-form>
+                `)
+                document.getElementById('new_fee').querySelector('.currency-symbol').innerHTML = currencyIcons[selectedCurrency]
+                openPopup('increase_fee_popup')
+            }).catch(e => {
+                console.error(e)
+            }).finally(_ => {
+                buttonLoader(button, false)
+            })
+        }
+        function increaseFee() {
+            buttonLoader(document.getElementById('increase_fee'), true)
+            const newFee = parseFloat((parseFloat(document.getElementById('new_fee').value.trim()) / (globalExchangeRate[selectedCurrency] || 1)).toFixed(8))
+            const privateKeys = []
+            document.querySelectorAll('.increase-fee-sender').forEach(sender => {
+                const address = sender.querySelector('.sender__address').textContent.trim()
+                const privateKey = sender.querySelector('.sender__private-key').value.trim()
+                if (!btcOperator.verifyKey(address, privateKey))
+                    return notify(`Invalid private key for address ${address}`, 'error')
+                if (privateKey) {
+                    privateKeys.push(privateKey)
+                }
+            })
+            console.log(changingFeeOf, newFee, privateKeys)
+            btcOperator.editFee(changingFeeOf, newFee, privateKeys).then(signedTxHex => {
+                btcOperator.broadcastTx(signedTxHex).then(txId => {
+                    console.log(txId)
+                    closePopup()
+                    getRef('txid').value = txId;
+                    openPopup('txid_popup', true);
+                }).catch(e => {
+                    notify(e, 'error')
+                }).finally(_ => {
+                    buttonLoader(document.getElementById('increase_fee'), false)
+                    changingFeeOf = null
+                })
+            }).catch(e => {
+                notify(e, 'error')
+                buttonLoader(document.getElementById('increase_fee'), false)
+            })
+        }
     </script>
 </body>
 
