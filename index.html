@@ -1354,7 +1354,6 @@
                 txDetailsAbortController = new AbortController();
                 btcOperator.getTx(txid).then(result => {
                     const { block, time, size, fee, inputs, outputs, confirmations, total_input_value, total_output_value } = result;
-
                     console.debug('tx', result);
                     renderElem(getRef('tx_details'), html`
                             <table class="margin-bottom-1-5 justify-self-center">
@@ -1365,7 +1364,7 @@
                                     </tr>
                                     <tr>
                                         <td>Block</td>
-                                        <td>${block}</td>
+                                        <td>${block} ${!block ? html`<strong>Unconfirmed transaction</strong>` : ''}</td>
                                     </tr>
                                     <tr>
                                         <td>Confirmations</td>
@@ -1492,37 +1491,40 @@
         function roundUp(amount, precision = 2) {
             return parseFloat((Math.ceil(amount * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
         }
-        getRef('currency_selector').addEventListener('change', async e => {
-            localStorage.setItem('btc-wallet-currency', e.target.value);
-            document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[e.target.value])
+        let previouslySelectedCurrency = localStorage.getItem('btc-wallet-currency') || 'btc';
+        getRef('currency_selector').addEventListener('change', e => {
+            selectedCurrency = e.target.value;
+            localStorage.setItem('btc-wallet-currency', selectedCurrency);
+            document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[selectedCurrency])
             document.querySelectorAll('.amount-shown').forEach(el => {
                 if (el.tagName.includes('SM-')) {
                     const originalAmount = parseFloat(el.value.trim());
                     let convertedAmount
                     const rupeeRate = (globalExchangeRate.inr / globalExchangeRate.usd);
-                    switch (selectedCurrency) {
+                    switch (previouslySelectedCurrency) {
                         case 'usd':
-                            if (e.target.value === 'inr')
+                            if (selectedCurrency === 'inr')
                                 convertedAmount = roundUp(originalAmount * rupeeRate)
                             else
                                 convertedAmount = roundUp((originalAmount / globalExchangeRate.usd), 8)
                             break;
                         case 'inr':
-                            if (e.target.value === 'usd')
+                            if (selectedCurrency === 'usd')
                                 convertedAmount = roundUp((originalAmount / rupeeRate))
                             else
                                 convertedAmount = roundUp((originalAmount / globalExchangeRate.inr), 8)
                             break;
                         case 'btc':
-                            convertedAmount = roundUp(originalAmount * globalExchangeRate[e.target.value])
+                            convertedAmount = roundUp(originalAmount * globalExchangeRate[selectedCurrency])
                             break;
                     }
                     el.value = convertedAmount
                 } else {
+                    if (el.dataset.btcAmount === undefined) return
                     el.textContent = formatAmount(getConvertedAmount(el.dataset.btcAmount))
                 }
             })
-            selectedCurrency = e.target.value;
+            previouslySelectedCurrency = selectedCurrency
         })
         getRef('filter_selector').addEventListener('change', async e => {
             const address = getRef('search_query_input').value;
@@ -1862,6 +1864,7 @@
                 }
                 fee = parseFloat((parseFloat(feeInput) / (globalExchangeRate[selectedCurrency] || 1)).toFixed(8));
             }
+            console.log(senders, privKeys, receivers, amounts, fee);
             btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
                 console.log(txid);
                 getRef('txid').value = txid;
