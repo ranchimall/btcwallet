@@ -8,7 +8,7 @@ It is a web-based Bitcoin wallet and Bitcoin explorer that promotes self-custody
 
 #### Do not forget to copy and save the private key in a safe place. This BTC wallet doesn't give a seed phrase but directly the original private key, which makes it more secure for the users to take full custody of their bitcoins.
 
-### Note: seed phrases are English words and can be memorized by someone who looks at your screen. Private keys are random characters that hide inside asterisk signs that make it difficult for anyone to look at them and memorize them.
+#### Note: seed phrases are English words and can be memorized by someone who looks at your screen. Private keys are random characters that hide inside asterisk signs that make it difficult for anyone to look at them and memorize them.
 
 These are client-side scripts that can generate Bitcoin addresses, send Bitcoin transactions to the blockchain, and monitor Bitcoin data from the Bitcoin blockchain
 
@@ -44,9 +44,9 @@ x) Fees can be modified by the user. An increased fee increases the chance of tr
 xi) Click on the "Send" button to initiate the transaction <br>
 xii) This will give the transaction id using which the transaction details and confirmation can be monitored <br>
 
-### Note: Multiple senders and multiple receiver addresses can be used to send Bitcoins to multiple receivers. For multiple senders, all their corresponding private keys will be required
+#### Note: Multiple senders and multiple receiver addresses can be used to send Bitcoins to multiple receivers. For multiple senders, all their corresponding private keys will be required
 
-### Note: The fee is comparatively low than other Bitcoin wallets or other Exchange wallets because RanchiMall does not have any additional fees for any transaction.
+#### Note: The fee is comparatively low than other Bitcoin wallets or other Exchange wallets because RanchiMall does not have any additional fees for any transaction.
 
 
 ## Convert
