@@ -3,7 +3,6 @@
 BTC Wallet
 It is a web-based Bitcoin wallet and Bitcoin explorer that promotes self-custody by generating Bitcoin addresses and private keys locally on the user's device. If you are suspicious about internet monitoring, then open the URL, disconnect your computer from the internet, and then generate the Bitcoin address and private key.  
 
-[User documentation](https://www.ranchimall.github.io/btcwallet).
 
 ### Live URL for BTC Wallet:
 *https://ranchimall.github.io/btcwallet/*
