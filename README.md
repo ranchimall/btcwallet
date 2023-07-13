@@ -74,7 +74,6 @@ i) Click on the "Convert" button on the homepage <br>
 ii) Click on "FLO" if you want to convert a FLO blockchain address or FLO private key to its equivalent BTC address or BTC private key <br>
 iii) Under the "Private key converter", enter the private key of the FLO address. This will convert the FLO private key to the equivalent BTC private key and BTC address <br>
 iv) Click on "BTC" if you want to convert a Bitcoin blockchain address or BTC private key to its equivalent FLO address or FLO private key <br>
-
 v) Under the "Address converter", enter the FLO address to get the equivalent BTC address and vice versa <br>
 
  
