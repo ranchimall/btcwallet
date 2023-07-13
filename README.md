@@ -30,19 +30,19 @@ i) In case you have forgotten your Bitcoin address but still have your private k
 i) Any Bitcoin address or a Bitcoin transaction id can be searched to fetch the blockchain data. Simply enter the Bitcoin address or the transaction id, press "Enter" or click on "Search" to fetch the blockchain transactions.
 
 ### Send
-i) The "Send" button can be used to send bitcoins to other Bitcoin addresses.
-ii) Click on the "Send" button from the left menu bar
-iii) Enter or paste the "Sender's Bitcoin address"
-iv) Enter or paste the "Sender's Bitcoin private key"
-v) Upon entering the private key, the balance of the address will reflect on the screen
-vi) Enter the "Reciever's Bitcoin address"
-vi) Enter the "amount" of bitcoin to be sent
-vii) Amount can be entered in the form of BTC, USD, or INR 
-viii) Amount entered in USD or INR will automatically convert to the equivalent BTC amount
-ix) Approximate fees will show up before making the transaction
-x) Fees can be modified by the user. An increased fee increases the chance of transactions taking place faster
-xi) Click on the "Send" button to initiate the transaction
-xii) This will give the transaction id using which the transaction details and confirmation can be monitored
+i) The "Send" button can be used to send bitcoins to other Bitcoin addresses. <br>
+ii) Click on the "Send" button from the left menu bar <br>
+iii) Enter or paste the "Sender's Bitcoin address" <br>
+iv) Enter or paste the "Sender's Bitcoin private key" <br>
+v) Upon entering the private key, the balance of the address will reflect on the screen <br>
+vi) Enter the "Reciever's Bitcoin address" <br>
+vi) Enter the "amount" of bitcoin to be sent <br>
+vii) Amount can be entered in the form of BTC, USD, or INR <br>
+viii) Amount entered in USD or INR will automatically convert to the equivalent BTC amount <br>
+ix) Approximate fees will show up before making the transaction <br>
+x) Fees can be modified by the user. An increased fee increases the chance of transactions taking place faster <br>
+xi) Click on the "Send" button to initiate the transaction <br>
+xii) This will give the transaction id using which the transaction details and confirmation can be monitored <br>
 
 ### Note: Multiple senders and multiple receiver addresses can be used to send Bitcoins to multiple receivers. For multiple senders, all their corresponding private keys will be required
 
