@@ -24,7 +24,7 @@ Click on "Generate BTC address" to generate a new Bitcoin address with its priva
 Note: Do not share your private key with anyone and keep it safe. Once lost a private key can't be recovered.
 
 ### Retrieve BTC address
-In case you have forgotten your Bitcoin address but still have your private key, you can retrieve the Bitcoin address. Simply enter the private key and click on the "Recover" button.
+In case you have forgotten your Bitcoin address but still have the private key, you can retrieve the Bitcoin address. Simply enter the private key and click on the "Recover" button.
 
 ### Search BTC address or transaction ID (Bitcoin Explorer)
 Any Bitcoin address or a Bitcoin transaction id can be searched to fetch the blockchain data. Simply enter the Bitcoin address or the transaction id, press "Enter" or click on "Search" to fetch the blockchain transactions.
