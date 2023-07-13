@@ -19,15 +19,15 @@ Note: BTC Wallet uses IndedxedDB for storing data, which means data is stored in
 ## Functions:
 
 ### Generate BTC address
-i) Click on "Generate BTC address" to generate a new Bitcoin address with its private key. With the use of the "Copy" button, both the BTC address and private key can be copied to save it somewhere safe.
+Click on "Generate BTC address" to generate a new Bitcoin address with its private key. With the use of the "Copy" button, both the BTC address and private key can be copied to save it somewhere safe.
 
 Note: Do not share your private key with anyone and keep it safe. Once lost a private key can't be recovered.
 
 ### Retrieve BTC address
-i) In case you have forgotten your Bitcoin address but still have your private key, you can retrieve the Bitcoin address. Simply enter the private key and click on the "Recover" button.
+In case you have forgotten your Bitcoin address but still have your private key, you can retrieve the Bitcoin address. Simply enter the private key and click on the "Recover" button.
 
 ### Search BTC address or transaction ID (Bitcoin Explorer)
-i) Any Bitcoin address or a Bitcoin transaction id can be searched to fetch the blockchain data. Simply enter the Bitcoin address or the transaction id, press "Enter" or click on "Search" to fetch the blockchain transactions.
+Any Bitcoin address or a Bitcoin transaction id can be searched to fetch the blockchain data. Simply enter the Bitcoin address or the transaction id, press "Enter" or click on "Search" to fetch the blockchain transactions.
 
 ### Send
 i) The "Send" button can be used to send bitcoins to other Bitcoin addresses. <br>
