@@ -50,31 +50,31 @@ xii) This will give the transaction id using which the transaction details and c
 
 
 ## Convert
-i) "Convert" is a special feature developed by RanchiMall which converts a FLO blockchain address to an equivalent Bitcoin address
-ii) The same can be done with a Bitcoin address as well. A Bitcoin address can be converted to its equivalent FLO address
+i) "Convert" is a special feature developed by RanchiMall which converts a FLO blockchain address to an equivalent Bitcoin address <br>
+ii) The same can be done with a Bitcoin address as well. A Bitcoin address can be converted to its equivalent FLO address <br>
 
 ### Why is "Converter" required
-i) RanchiMall has built all dapps on the FLO blockchain
-ii) All the dapps require a FLO private key to be signed in
-iii) Later RanchiMall developed a Bitcoin address sign-in architecture for its dapps
+i) RanchiMall has built all dapps on the FLO blockchain <br>
+ii) All the dapps require a FLO private key to be signed in <br>
+iii) Later RanchiMall developed a Bitcoin address sign-in architecture for its dapps <br>
 iv) If a user has a FLO address and he/she uses any of RanchiMall dapps, then using an equivalent Bitcoin address to sign in will also take the user to the same account which he/she signed into using their FLO private key.
 
 ### More about Converter
-i) Both the FLO or BTC address and the Private keys can be converted for each other
-ii) This means a FLO address can have its equivalent BTC address and a BTC address can have its equivalent FLO address
-iii) A FLO private key can be converted to its equivalent BTC address's private key
+i) Both the FLO or BTC address and the Private keys can be converted for each other <br>
+ii) This means a FLO address can have its equivalent BTC address and a BTC address can have its equivalent FLO address <br>
+iii) A FLO private key can be converted to its equivalent BTC address's private key <br>
 
-Note: The pairing of this conversion will always remain same.
-a) A FLO blockchain address can have only one equivalent BTC address
-b) A Bitcoin blockchain address can have only one equivalent FLO blockchain address
-c) Along with the FLO or BTC address, their private keys can also be converted
+#### Note: The pairing of this conversion will always remain the same. <br>
+a) A FLO blockchain address can have only one equivalent BTC address <br>
+b) A Bitcoin blockchain address can have only one equivalent FLO blockchain address <br>
+c) Along with the FLO or BTC address, their private keys can also be converted <br>
 
 ### How to use Converter
-i) Click on the "Convert" button on the homepage
-ii) Click on "FLO" if you want to convert a FLO blockchain address or FLO private key to its equivalent BTC address or BTC private key
-iii) Under the "Private key converter", enter the private key of the FLO address. This will convert the FLO private key to the equivalent BTC private key and BTC address
-iv) Click on "BTC" if you want to convert a Bitcoin blockchain address or BTC private key to its equivalent FLO address or FLO private key
+i) Click on the "Convert" button on the homepage <br>
+ii) Click on "FLO" if you want to convert a FLO blockchain address or FLO private key to its equivalent BTC address or BTC private key <br>
+iii) Under the "Private key converter", enter the private key of the FLO address. This will convert the FLO private key to the equivalent BTC private key and BTC address <br>
+iv) Click on "BTC" if you want to convert a Bitcoin blockchain address or BTC private key to its equivalent FLO address or FLO private key <br>
 
-v) Under the "Address converter", enter the FLO address to get the equivalent BTC address and vice versa
+v) Under the "Address converter", enter the FLO address to get the equivalent BTC address and vice versa <br>
 
  
