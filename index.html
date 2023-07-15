@@ -111,7 +111,7 @@
                             <output id="address_balance" class="amount-shown"></output>
                         </div>
                         <div class="flex align-center space-between margin-bottom-1 sticky top-0"
-                            style="background-color: rgba(var(--foreground-color), 1);">
+                            style="background-color: rgba(var(--foreground-color), 1); z-index: 2">
                             <h5>Transactions</h5>
                             <sm-chips id="filter_selector">
                                 <sm-chip value="all" selected>All</sm-chip>
@@ -1930,6 +1930,7 @@
                 } catch (e) {
                     console.error(e)
                 }
+                console.log(inputs)
                 renderElem(getRef('increase_fee_popup_content'), html`
                     <sm-form style="--gap: 2rem">
                         <div class="grid gap-0-5">

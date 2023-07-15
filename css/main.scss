@@ -602,17 +602,17 @@ ol {
 #main_header {
   padding: 1.5rem max(1rem, 4vw);
 }
-.app-brand{
+.app-brand {
   display: flex;
   gap: 0.3rem;
   align-items: center;
-  .icon{
+  .icon {
     height: 1.7rem;
     width: 1.7rem;
   }
 }
-.app-name{
-  &__company{
+.app-name {
+  &__company {
     font-size: 0.8rem;
     font-weight: 500;
     color: rgba(var(--text-color), 0.8);
@@ -809,6 +809,8 @@ ol {
   grid-template-columns: auto 1fr;
   gap: 0.5rem 1rem;
   align-items: center;
+  content-visibility: auto;
+  contain-intrinsic-height: 8rem;
   &:not(:last-of-type) {
     padding-bottom: 2rem;
   }

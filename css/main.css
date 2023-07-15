@@ -874,6 +874,8 @@ ol li::before {
   grid-template-columns: auto 1fr;
   gap: 0.5rem 1rem;
   align-items: center;
+  content-visibility: auto;
+  contain-intrinsic-height: 8rem;
 }
 .transaction:not(:last-of-type) {
   padding-bottom: 2rem;
