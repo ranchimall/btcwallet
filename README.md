@@ -9,7 +9,8 @@ It is a web-based Bitcoin wallet and Bitcoin explorer that promotes self-custody
 
 #### Do not forget to copy and save the private key in a safe place. This BTC wallet doesn't give a seed phrase but directly the original private key, which makes it more secure for the users to take full custody of their bitcoins.
 
-#### Note: seed phrases are English words and can be memorized by someone who is looking at your screen. Private keys are random characters that hide inside asterisk signs that make it difficult for anyone to look at them and memorize them.
+#### Note:
+seed phrases are English words and can be memorized by someone who is looking at your screen. Private keys are random characters that hide inside asterisk signs that make it difficult for anyone to look at them and memorize them.
 
 These are client-side scripts that can generate Bitcoin addresses, send Bitcoin transactions to the blockchain, and monitor Bitcoin data from the Bitcoin blockchain
 
