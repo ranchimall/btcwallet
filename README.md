@@ -2,6 +2,7 @@
 
 BTC Wallet
 It is a web-based Bitcoin wallet and Bitcoin explorer that promotes self-custody by generating Bitcoin addresses and private keys locally on the user's device. If you are suspicious about internet monitoring, then open the URL, disconnect your computer from the internet, and then generate the Bitcoin address and private key.  
+These are client-side scripts that can generate Bitcoin addresses, send Bitcoin transactions to the blockchain, and monitor Bitcoin data from the Bitcoin blockchain.
 
 
 ### Live URL for BTC Wallet:
@@ -12,7 +13,6 @@ It is a web-based Bitcoin wallet and Bitcoin explorer that promotes self-custody
 #### Note:
 Seed phrases are English words and can be memorized by someone who is looking at your screen. Private keys are random characters that hide inside asterisk signs that make it difficult for anyone to look at them and memorize them.
 
-These are client-side scripts that can generate Bitcoin addresses, send Bitcoin transactions to the blockchain, and monitor Bitcoin data from the Bitcoin blockchain
 
 ## Instructions to use 
 
