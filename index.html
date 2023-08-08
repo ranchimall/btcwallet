@@ -1357,9 +1357,8 @@
                 }
                 txDetailsAbortController = new AbortController();
                 btcOperator.getTx(txid).then(result => {
-                    let { block, time, size, fee, inputs, outputs, confirmations, total_input_value, total_output_value } = result;
+                    const { block, time, size, fee, inputs, outputs, confirmations, total_input_value, total_output_value } = result;
                     console.debug('tx', result);
-                    block = undefined
                     renderElem(getRef('tx_details'), html`
                             <h3>Transaction Details</h3>
                             <div class="flex align-center gap-1 space-between flex-wrap">
