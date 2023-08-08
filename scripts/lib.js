@@ -7226,6 +7226,15 @@
         /* decode or validate an address and return the hash */
         coinjs.addressDecode = function (addr) {
             try {
+                //Addition of Taproot check before other checks
+                if (segwit_addr.isTaprootAddress(addr)){
+                    var data  = segwit_addr.decode("bc",addr);
+                    data.type = "bech32m";
+                    data.outstring = "5120" + Crypto.util.bytesToHex(data.program);
+                    return data;
+                }
+
+               //Resuming regular checks
                 var bytes = coinjs.base58decode(addr);
                 var front = bytes.slice(0, bytes.length - 4);
                 var back = bytes.slice(bytes.length - 4);
