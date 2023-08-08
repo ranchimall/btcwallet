@@ -7965,6 +7965,13 @@
             r.spendToScript = function (address) {
                 var addr = coinjs.addressDecode(address);
                 var s = coinjs.script();
+                
+                //Adding Taproot output writing
+                if (addr.type == "bech32m") {
+                    s.writeBytes(Crypto.util.hexToBytes(addr.outstring)); 
+                    return s;
+                }
+
                 if (addr.type == "bech32" || addr.type == "multisigBech32") {
                     s.writeOp(0);
                     s.writeBytes(Crypto.util.hexToBytes(addr.redeemscript));
