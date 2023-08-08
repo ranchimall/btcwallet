@@ -1357,45 +1357,46 @@
                 }
                 txDetailsAbortController = new AbortController();
                 btcOperator.getTx(txid).then(result => {
-                    const { block, time, size, fee, inputs, outputs, confirmations, total_input_value, total_output_value } = result;
+                    let { block, time, size, fee, inputs, outputs, confirmations, total_input_value, total_output_value } = result;
                     console.debug('tx', result);
+                    block = undefined
                     renderElem(getRef('tx_details'), html`
-                            <table class="margin-bottom-1-5 justify-self-center">
-                                <tbody>
-                                    <tr>
-                                        <td>Hash</td>
-                                        <td class="wrap-around">${txid}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Block</td>
-                                        <td>${block} ${!block ? html`<strong>Unconfirmed transaction</strong>` : ''}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Confirmations</td>
-                                        <td>${confirmations}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Size</td>
-                                        <td>${size} bytes</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Time</td>
-                                        <td>${getFormattedTime(time)}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Total Inputs</td>
-                                        <td class="amount-shown" data-btc-amount="${total_input_value}">${formatAmount(getConvertedAmount(total_input_value))}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Total Outputs</td>
-                                        <td class="amount-shown" data-btc-amount="${total_output_value}">${formatAmount(getConvertedAmount(total_output_value))}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Fee</td>
-                                        <td class="amount-shown" data-btc-amount="${fee}">${formatAmount(getConvertedAmount(fee))}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <h3>Transaction Details</h3>
+                            <div class="flex align-center gap-1 space-between flex-wrap">
+                                <time>${getFormattedTime(time)}</time>
+                                ${!block ? html` <h4 id="tx_status">
+                                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                                    Unconfirmed
+                                </h4> ` : ''}
+                            </div>
+                            <div id="tx_technicals" class="margin-bottom-1-5 justify-self-center">
+                                <div class="tx-detail">
+                                    <div>Total Inputs</div>
+                                    <div class="amount-shown" data-btc-amount="${total_input_value}">${formatAmount(getConvertedAmount(total_input_value))}</div>
+                                </div>
+                                <div class="tx-detail">
+                                    <div>Total Outputs</div>
+                                    <div class="amount-shown" data-btc-amount="${total_output_value}">${formatAmount(getConvertedAmount(total_output_value))}</div>
+                                </div>
+                                <div class="tx-detail">
+                                    <div>Fee</div>
+                                    <div class="amount-shown" data-btc-amount="${fee}">${formatAmount(getConvertedAmount(fee))}</div>
+                                </div>
+                                ${block ? html`
+                                    <div class="tx-detail">
+                                        <div>Block</div>
+                                        <div>${block}</div>
+                                    </div>
+                                ` : ''}
+                                <div class="tx-detail">
+                                    <div>Confirmations</div>
+                                    <div>${confirmations}</div>
+                                </div>
+                                <div class="tx-detail">
+                                    <div>Size</div>
+                                    <div>${size} bytes</div>
+                                </div>
+                            </div>
                             <div id="in_out_wrapper" class="flex flex-wrap">
                                 <div>
                                     <div class="flex align-center space-between margin-bottom-1" style="padding: 0.5rem 1rem;">
