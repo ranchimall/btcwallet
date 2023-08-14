@@ -657,7 +657,7 @@
     btcOperator.sendTx = function (senders, privkeys, receivers, amounts, fee = null, options = {}) {
         return new Promise((resolve, reject) => {
             createSignedTx(senders, privkeys, receivers, amounts, fee, options).then(result => {
-                debugger;
+               // debugger;
                 broadcastTx(result.transaction.serialize())
                     .then(txid => resolve(txid))
                     .catch(error => reject(error));
