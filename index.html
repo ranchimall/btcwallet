@@ -774,8 +774,8 @@
                 notify('Browser is not fully compatible, some features may not work. for best experience please use Chrome, Edge, Firefox or Safari', 'error')
             }
             document.body.classList.remove('hidden')
-            document.querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
-            document.querySelectorAll('sm-input[data-flo-address]').forEach(input => input.customValidation = floCrypto.validateFloID)
+            document.querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = (value) => { return { isValid: btcOperator.validateAddress(value) } })
+            document.querySelectorAll('sm-input[data-flo-address]').forEach(input => input.customValidation = (value) => { isValid: floCrypto.validateFloID })
             document.addEventListener('keyup', (e) => {
                 if (e.key === 'Escape') {
                     closePopup()
@@ -1683,7 +1683,12 @@
                 senderCard.querySelector('.remove-card').remove()
             }
             getRef('sender_container').appendChild(senderCard);
-            getRef('sender_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
+            getRef('sender_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = (value) => {
+                const validate = btcOperator.validateAddress(value)
+                const isValid = !(validate === false || validate === 'bech32m')
+                console.log(validate)
+                return { isValid, errorText: validate === 'bech32m' ? `This is a Taproot address. This wallet does't support claiming Taproot funds yet.` : 'Please enter valid BTC address' }
+            })
             if (address) {
                 getRef('sender_container').lastElementChild.querySelector('.sender-input').value = address
             }
@@ -1728,7 +1733,7 @@
             }
             receiverCard.querySelector('.currency-symbol') ? receiverCard.querySelector('.currency-symbol').innerHTML = currencyIcons[selectedCurrency] : null;
             getRef('receiver_container').appendChild(receiverCard);
-            getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = btcOperator.validateAddress)
+            getRef('receiver_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = (value) => { return { isValid: btcOperator.validateAddress(value) } })
             if (address) {
                 getRef('receiver_container').lastElementChild.querySelector('.receiver-input').value = address
             }
