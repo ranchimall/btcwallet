@@ -1368,34 +1368,60 @@
                                     Unconfirmed
                                 </h4> ` : ''}
                             </div>
-                            <div id="tx_technicals" class="margin-bottom-1-5 justify-self-center">
+                            <div id="tx_technicals" class="justify-self-center details-wrapper">
                                 <div class="tx-detail">
-                                    <div>Total Inputs</div>
-                                    <div class="amount-shown" data-btc-amount="${total_input_value}">${formatAmount(getConvertedAmount(total_input_value))}</div>
-                                </div>
-                                <div class="tx-detail">
-                                    <div>Total Outputs</div>
-                                    <div class="amount-shown" data-btc-amount="${total_output_value}">${formatAmount(getConvertedAmount(total_output_value))}</div>
-                                </div>
-                                <div class="tx-detail">
-                                    <div>Fee</div>
-                                    <div class="amount-shown" data-btc-amount="${fee}">${formatAmount(getConvertedAmount(fee))}</div>
+                                    <div class="flex align-center gap-0-3">
+                                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                                        <div>Confirmations</div>
+                                    </div>
+                                    <div style="font-size: 1.5rem">${confirmations}</div>
                                 </div>
                                 ${block ? html`
                                     <div class="tx-detail">
-                                        <div>Block</div>
+                                        <div class="flex align-center gap-0-3">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><g><g><path d="M3,3v8h8V3H3z M9,9H5V5h4V9z M3,13v8h8v-8H3z M9,19H5v-4h4V19z M13,3v8h8V3H13z M19,9h-4V5h4V9z M13,13v8h8v-8H13z M19,19h-4v-4h4V19z"/></g></g></g></svg>
+                                            <div>Block</div>
+                                        </div>
                                         <div>${block}</div>
                                     </div>
                                 ` : ''}
                                 <div class="tx-detail">
-                                    <div>Confirmations</div>
-                                    <div>${confirmations}</div>
-                                </div>
-                                <div class="tx-detail">
-                                    <div>Size</div>
-                                    <div>${size} bytes</div>
+                                    <div class="flex align-center gap-0-3">
+                                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M15 4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zM3 12c0-2.61 1.67-4.83 4-5.65V4.26C3.55 5.15 1 8.27 1 12s2.55 6.85 6 7.74v-2.09c-2.33-.82-4-3.04-4-5.65z"/></svg>
+                                        <div>Fee</div>
+                                    </div>
+                                    <div class="amount-shown" data-btc-amount="${fee}">${formatAmount(getConvertedAmount(fee))}</div>
                                 </div>
                             </div>
+                            <details class="margin-bottom-1-5 justify-self-center w-100">
+                                <summary>
+                                    More details
+                                    <svg class="icon down-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M24 24H0V0h24v24z" fill="none" opacity=".87"/><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6-1.41-1.41z"/></svg>    
+                                </summary>
+                                <div class="details-wrapper">
+                                    <div class="tx-detail">
+                                        <div class="flex align-center gap-0-3">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>
+                                            <div>Total Inputs</div>
+                                        </div>
+                                        <div class="amount-shown" data-btc-amount="${total_input_value}">${formatAmount(getConvertedAmount(total_input_value))}</div>
+                                    </div>
+                                    <div class="tx-detail">
+                                        <div class="flex align-center gap-0-3">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
+                                            <div>Total Outputs</div>
+                                        </div>
+                                        <div class="amount-shown" data-btc-amount="${total_output_value}">${formatAmount(getConvertedAmount(total_output_value))}</div>
+                                    </div>
+                                    <div class="tx-detail">
+                                        <div class="flex align-center gap-0-3">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z"/></svg>
+                                            <div>Size</div>
+                                        </div>
+                                        <div>${size} bytes</div>
+                                    </div>
+                                </div>
+                            </details>
                             <div id="in_out_wrapper" class="flex flex-wrap">
                                 <div>
                                     <div class="flex align-center space-between margin-bottom-1" style="padding: 0.5rem 1rem;">
