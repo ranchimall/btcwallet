@@ -1125,6 +1125,7 @@ ol li::before {
   flex-wrap: wrap;
   width: 100%;
   align-items: start;
+  container: input-action/inline-size;
 }
 .input-action-wrapper sm-input {
   width: auto;
@@ -1133,10 +1134,18 @@ ol li::before {
 }
 .input-action-wrapper button {
   min-width: 7rem;
-  flex: 1;
   min-height: 3.15rem;
 }
 
+@container input-action (max-width: 28rem) {
+  sm-input {
+    width: 100%;
+    min-width: 16rem !important;
+  }
+  button {
+    flex: 1;
+  }
+}
 @media screen and (max-width: 40rem) {
   #main_navbar.hide-away {
     bottom: 0;
