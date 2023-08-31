@@ -383,8 +383,12 @@ ol li::before {
   text-align: right;
 }
 
-.align-start {
+.align-content-start {
   align-content: flex-start;
+}
+
+.align-items-start {
+  align-items: flex-start;
 }
 
 .align-center {
@@ -1113,6 +1117,24 @@ ol li::before {
   padding: 1rem;
   border-radius: 0.5rem;
   border: solid thin rgba(var(--text-color), 0.3);
+}
+
+.input-action-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: start;
+}
+.input-action-wrapper sm-input {
+  width: auto;
+  flex: 1;
+  min-width: 20rem;
+}
+.input-action-wrapper button {
+  min-width: 7rem;
+  flex: 1;
+  min-height: 3.15rem;
 }
 
 @media screen and (max-width: 40rem) {
