@@ -170,13 +170,16 @@ a:any-link:focus-visible {
 
 details summary {
   display: flex;
+  gap: 0.3rem;
   -webkit-user-select: none;
      -moz-user-select: none;
           user-select: none;
   cursor: pointer;
   align-items: center;
-  justify-content: space-between;
   color: var(--accent-color);
+}
+details summary .down-arrow {
+  fill: var(--accent-color);
 }
 
 details[open] summary {

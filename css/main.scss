@@ -150,11 +150,14 @@ a:any-link:focus-visible {
 
 details summary {
   display: flex;
+  gap: 0.3rem;
   user-select: none;
   cursor: pointer;
   align-items: center;
-  justify-content: space-between;
   color: var(--accent-color);
+  .down-arrow {
+    fill: var(--accent-color);
+  }
 }
 
 details[open] {

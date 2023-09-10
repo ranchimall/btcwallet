@@ -94,7 +94,7 @@
             value: key => coinjs.bech32Address(btcOperator.pubkey(key)).address
         },
         bech32mAddress: {
-            value: key => segwit_addr.encode("bc",1,key)
+            value: key => segwit_addr.encode("bc", 1, key)
         }
     });
 
@@ -121,7 +121,7 @@
         if (!addr)
             return undefined;
         let type = coinjs.addressDecode(addr).type;
-        if (["standard", "multisig", "bech32", "multisigBech32","bech32m"].includes(type))
+        if (["standard", "multisig", "bech32", "multisigBech32", "bech32m"].includes(type))
             return type;
         else
             return false;
@@ -286,7 +286,7 @@
         BECH32_OUTPUT_SIZE = 23,
         BECH32_MULTISIG_OUTPUT_SIZE = 34,
         SEGWIT_OUTPUT_SIZE = 23;
-        BECH32M_OUTPUT_SIZE = 35; // Check this later
+    BECH32M_OUTPUT_SIZE = 35; // Check this later
 
     function _redeemScript(addr, key) {
         let decode = coinjs.addressDecode(addr);
@@ -337,7 +337,7 @@
             case "multisig":
                 return BASE_OUTPUT_SIZE + SEGWIT_OUTPUT_SIZE;
             case "bech32m":
-                return BASE_OUTPUT_SIZE + BECH32M_OUTPUT_SIZE;    
+                return BASE_OUTPUT_SIZE + BECH32M_OUTPUT_SIZE;
             default:
                 return null;
         }
@@ -657,7 +657,7 @@
     btcOperator.sendTx = function (senders, privkeys, receivers, amounts, fee = null, options = {}) {
         return new Promise((resolve, reject) => {
             createSignedTx(senders, privkeys, receivers, amounts, fee, options).then(result => {
-               // debugger;
+                // debugger;
                 broadcastTx(result.transaction.serialize())
                     .then(txid => resolve(txid))
                     .catch(error => reject(error));
