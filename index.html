@@ -1270,7 +1270,6 @@
         let txDetailsAbortController
         const render = {
             transactionCard(transactionDetails) {
-                console.log(transactionDetails)
                 let { address, amount, time, txid, sender, receiver, type, block } = transactionDetails;
                 let transactionReceiver
                 let icon
@@ -1966,42 +1965,42 @@
         }
 
         let changingFeeOf = null
-        function initFeeChange(e) {
+        async function initFeeChange(e) {
             const button = e.target.closest('button')
             buttonLoader(button, true)
             const txid = button.closest('li').dataset.txid
             changingFeeOf = txid
-            btcOperator.getTx(txid).then(async details => {
-                const { inputs, outputs, fee } = details
+            try {
+                const { inputs, outputs, fee } = await btcOperator.getTx(txid)
+                const { witness } = btcOperator.deserializeTx(await btcOperator.getTx.hex(txid))
+                const requiredSigns = extractLastHexStrings(witness).reduce((acc, hex) => {
+                    const { address, required } = btcOperator.decodeRedeemScript(hex) || {}
+                    if (address)
+                        return { ...acc, [address]: required }
+                    else return acc
+                }, {})
                 const senders = inputs.map(input => input.address)
                 const receivers = outputs.map(output => output.address)
                 const amounts = outputs.map(output => 0.00000001)
-                let recommendedFee = 0
-                try {
-                    const { fee } = await btcOperator.createTx(senders, receivers, amounts)
-                    recommendedFee = fee
-                } catch (e) {
-                    console.error(e)
-                }
-                console.log(inputs)
+                const { fee: recommendedFee = 0 } = await btcOperator.createTx(senders, receivers, amounts)
                 renderElem(getRef('increase_fee_popup_content'), html`
                     <sm-form style="--gap: 2rem">
                         <div class="grid gap-0-5">
                             <h4>Senders</h4>
                             <ul class="grid gap-0-5">
-                                ${inputs.map(input => html.node`<li class="increase-fee-sender grid gap-1">
+                                ${senders.map((address) => html.node`<li class="increase-fee-sender grid gap-1">
                                     <div>
                                         <div class="label">Address</div>
-                                        <b class="sender__address wrap-around">${input.address}</b>
+                                        <b class="sender__address wrap-around">${address}</b>
                                     </div>
-                                    <sm-input class="sender__private-key password-field" type="password" placeholder="Private Key" animate required>
+                                    ${[...Array(requiredSigns[address] || 1)].map(_ => html`<sm-input class="sender__private-key password-field" type="password" placeholder="Private Key" animate required>
                                         <svg class="icon" slot="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <g> <rect fill="none" height="24" width="24"></rect> </g> <g> <path d="M21,10h-8.35C11.83,7.67,9.61,6,7,6c-3.31,0-6,2.69-6,6s2.69,6,6,6c2.61,0,4.83-1.67,5.65-4H13l2,2l2-2l2,2l4-4.04L21,10z M7,15c-1.65,0-3-1.35-3-3c0-1.65,1.35-3,3-3s3,1.35,3,3C10,13.65,8.65,15,7,15z"></path> </g> </svg>
                                         <label slot="right" class="interact">
                                             <input type="checkbox" class="hidden" autocomplete="off" readonly="" onchange="togglePrivateKeyVisibility(this)">
                                             <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Hide password</title> <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none"></path> <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"></path> </svg>
                                             <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Show password</title> <path d="M0 0h24v24H0z" fill="none"></path> <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path> </svg>
                                         </label>
-                                    </sm-input>
+                                    </sm-input>`)}
                                 </li>`)}
                             </ul>
                         </div>
@@ -2035,11 +2034,11 @@
                 `)
                 document.getElementById('new_fee').querySelector('.currency-symbol').innerHTML = currencyIcons[selectedCurrency]
                 openPopup('increase_fee_popup')
-            }).catch(e => {
+            } catch (e) {
                 console.error(e)
-            }).finally(_ => {
+            } finally {
                 buttonLoader(button, false)
-            })
+            }
         }
         function increaseFee() {
             buttonLoader(document.getElementById('increase_fee'), true)
@@ -2072,6 +2071,12 @@
                 buttonLoader(document.getElementById('increase_fee'), false)
             })
         }
+        function extractLastHexStrings(arr) {
+            return arr
+                .filter(innerArray => innerArray.length > 0)
+                .map(innerArray => innerArray[innerArray.length - 1])
+        }
+
     </script>
 </body>
 

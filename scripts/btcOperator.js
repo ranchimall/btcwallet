@@ -1,4 +1,4 @@
-(function (EXPORTS) { //btcOperator v1.1.3b
+(function (EXPORTS) { //btcOperator v1.1.3c
     /* BTC Crypto and API Operator */
     const btcOperator = EXPORTS;
 
@@ -770,7 +770,7 @@
         })
     }
 
-    function deserializeTx(tx) {
+    const deserializeTx = btcOperator.deserializeTx = function (tx) {
         if (typeof tx === 'string' || Array.isArray(tx)) {
             try {
                 tx = coinjs.transaction().deserialize(tx);
