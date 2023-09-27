@@ -503,7 +503,7 @@
             </div>
             <div class="grid">
                 <span class="label">Transaction ID</span>
-                <sm-copy id="txid"></sm-copy>
+                <sm-copy id="txid_popup__resolved_txid"></sm-copy>
             </div>
         </div>
     </sm-popup>
@@ -1923,12 +1923,29 @@
             console.log(senders, privKeys, receivers, amounts, fee);
             btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
                 console.log(txid);
-                getRef('txid').value = txid;
+                getRef('txid_popup__resolved_txid').value = txid;
                 openPopup('txid_popup', true);
                 getRef('send_tx').reset();
             }).catch(error => {
                 console.error(error)
-                notify(`Error sending transaction \n ${error}`, 'error');
+                if (error === 'TypeError: Failed to fetch') {
+                    notify(`
+                        <div style="display: grid; gap: 0.3rem;">
+                            <h4>Something went wrong!</h4>
+                            <p style="font-size: 0.9rem; opacity: 0.8">Please check transaction history before retrying.</p>
+                        </div>
+                        `, 'error', {
+                        action: {
+                            label: 'Check History',
+                            callback: () => {
+                                location.hash = `/check_details?query=${senders[0]}`;
+                                document.getElementById('notification_drawer').clearAll()
+                            }
+                        }
+                    });
+                } else {
+                    notify(`Error sending transaction \n ${error}`, 'error');
+                }
             }).finally(_ => {
                 buttonLoader('send_transaction', false)
             })
@@ -2058,7 +2075,7 @@
                 btcOperator.broadcastTx(signedTxHex).then(txId => {
                     console.log(txId)
                     closePopup()
-                    getRef('txid').value = txId;
+                    getRef('txid_popup__resolved_txid').value = txId;
                     openPopup('txid_popup', true);
                 }).catch(e => {
                     notify(e, 'error')
