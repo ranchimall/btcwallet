@@ -1044,7 +1044,7 @@
         }).catch(error => reject(error))
     });
 
-    getTx.hex = btcOperator.geTx.hex = txid => new Promise((resolve, reject) => {
+    getTx.hex = btcOperator.getTx.hex = txid => new Promise((resolve, reject) => {
         fetch_api(`rawtx/${txid}?format=hex`, false)
             .then(result => resolve(result))
             .catch(error => reject(error))
