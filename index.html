@@ -12,7 +12,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
         rel="stylesheet">
-    <script src="scripts/components.js" defer></script>
+    <script src="scripts/components.js"></script>
     <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
     <script type="text/javascript" src="scripts/lib.js"></script>
     <script src="scripts/floCrypto.js"></script>
@@ -586,17 +586,20 @@
         </fieldset>
     </template>
     <script id="ui_utils">
+        const uiGlobals = {}
         const { html, svg, render: renderElem } = uhtml;
         const domRefs = {}
         //Checks for internet connection status
         if (!navigator.onLine)
-            notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error', '', true)
+            uiGlobals.connectionErrorNotification = notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error')
         window.addEventListener('offline', () => {
-            notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error', true, true)
+            uiGlobals.connectionErrorNotification = notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error')
         })
         window.addEventListener('online', () => {
-            getRef('notification_drawer').clearAll()
+            if (uiGlobals.connectionErrorNotification)
+                getRef('notification_drawer').remove(uiGlobals.connectionErrorNotification)
             notify('We are back online.', 'success')
+            uiGlobals.connectionErrorNotification = null
         })
 
         // Use instead of document.getElementById
@@ -1292,7 +1295,6 @@
                 }
                 const queriedAddress = pagesData.params?.query || getRef('search_query_input').value.trim()
                 const isSender = type === 'out' || type === 'self'
-                const isMultisig = btcOperator.validateAddress(queriedAddress) !== 'standard'
                 const className = `transaction grid ${type} ${block === null ? 'unconfirmed-tx' : ''}`
                 return html.node`
                     <li class="${className}" data-txid="${txid}" data-transacting-addresses=${transactingAddresses.slice(2)}>
@@ -1311,7 +1313,7 @@
                                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
                                     View details
                                 </a>
-                                ${isSender && !block && !isMultisig ? html`
+                                ${isSender && !block ? html`
                                     <div class="multi-state-button">
                                         <button class="button button--small gap-0-3" onclick=${initFeeChange} title="Resend transaction with greater fees to reduce confirmation time">
                                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
@@ -1323,7 +1325,7 @@
                             ${!block ? html`
                                 <p class="pending-badge">
                                     Confirmation pending: amount will be deducted after transaction is confirmed.
-                                    ${isSender && !block && !isMultisig ? ' Try increasing fee to speed up confirmation' : ''}
+                                    ${isSender && !block ? ' Try increasing fee to speed up confirmation' : ''}
                                 </p>
                             ` : ''}
                         </div>
@@ -1733,7 +1735,6 @@
             getRef('sender_container').querySelectorAll('sm-input[data-btc-address]').forEach(input => input.customValidation = (value) => {
                 const validate = btcOperator.validateAddress(value)
                 const isValid = !(validate === false || validate === 'bech32m')
-                console.log(validate)
                 return { isValid, errorText: validate === 'bech32m' ? `This is a Taproot address. This wallet does't support claiming Taproot funds yet.` : 'Please enter valid BTC address' }
             })
             if (address) {
@@ -1988,64 +1989,82 @@
             const txid = button.closest('li').dataset.txid
             changingFeeOf = txid
             try {
-                const { inputs, outputs, fee } = await btcOperator.getTx(txid)
-                const { witness } = btcOperator.deserializeTx(await btcOperator.getTx.hex(txid))
-                const requiredSigns = extractLastHexStrings(witness).reduce((acc, hex) => {
-                    const { address, required } = btcOperator.decodeRedeemScript(hex) || {}
-                    if (address)
-                        return { ...acc, [address]: required }
-                    else return acc
-                }, {})
-                const senders = inputs.map(input => input.address)
+                const { inputs, outputs, fee: previousFee } = await btcOperator.getTx(txid)
+                const isMultisig = inputs.some(input => ["multisig", "multisigBech32"].includes(btcOperator.validateAddress(input.address)))
+                let senders = []
+                let requiredSignatures = 0
+                if (isMultisig) {
+                    const details = btcOperator.deserializeTx(await btcOperator.getTx.hex(txid))
+                    senders = btcOperator.extractLastHexStrings(details.witness).flatMap((hex) => {
+                        const { address, required: requiredSignatures, pubKeys } = btcOperator.decodeRedeemScript(hex) || {}
+                        console.log(btcOperator.decodeRedeemScript(hex))
+                        return pubKeys.map(pubKey => btcOperator.address(pubKey))
+                    })
+                } else {
+                    senders = inputs.map(input => input.address)
+                }
                 const receivers = outputs.map(output => output.address)
-                const amounts = outputs.map(output => 0.00000001)
-                const { fee: recommendedFee = 0 } = await btcOperator.createTx(senders, receivers, amounts)
+                const uniqueReceivers = outputs.reduce((acc, { address, value }) => {
+                    if (acc[address]) {
+                        acc[address] += value
+                    } else {
+                        acc[address] = value
+                    }
+                    return acc
+                }, {})
+                const amounts = outputs.map(output => 0.00000005)
+                let recommendedFee = null
+                if (!isMultisig) {
+                    const { fee } = await btcOperator.createTx(senders, receivers, amounts)
+                    if (fee > previousFee)
+                        recommendedFee = fee
+                }
                 renderElem(getRef('increase_fee_popup_content'), html`
                     <sm-form style="--gap: 2rem">
                         <div class="grid gap-0-5">
                             <h4>Senders</h4>
                             <ul class="grid gap-0-5">
-                                ${senders.map((address) => html.node`<li class="increase-fee-sender grid gap-1">
+                                ${[...new Set(senders)].map((address) => html.node`<li class="increase-fee-sender grid gap-1">
                                     <div>
                                         <div class="label">Address</div>
                                         <b class="sender__address wrap-around">${address}</b>
                                     </div>
-                                    ${[...Array(requiredSigns[address] || 1)].map(_ => html`<sm-input class="sender__private-key password-field" type="password" placeholder="Private Key" animate required>
+                                    <sm-input class="sender__private-key password-field" type="password" placeholder="Private Key" animate required>
                                         <svg class="icon" slot="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <g> <rect fill="none" height="24" width="24"></rect> </g> <g> <path d="M21,10h-8.35C11.83,7.67,9.61,6,7,6c-3.31,0-6,2.69-6,6s2.69,6,6,6c2.61,0,4.83-1.67,5.65-4H13l2,2l2-2l2,2l4-4.04L21,10z M7,15c-1.65,0-3-1.35-3-3c0-1.65,1.35-3,3-3s3,1.35,3,3C10,13.65,8.65,15,7,15z"></path> </g> </svg>
                                         <label slot="right" class="interact">
                                             <input type="checkbox" class="hidden" autocomplete="off" readonly="" onchange="togglePrivateKeyVisibility(this)">
                                             <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Hide password</title> <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none"></path> <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"></path> </svg>
                                             <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Show password</title> <path d="M0 0h24v24H0z" fill="none"></path> <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path> </svg>
                                         </label>
-                                    </sm-input>`)}
+                                    </sm-input>
                                 </li>`)}
                             </ul>
                         </div>
                         <div class="grid gap-0-5">
                             <h4>Receivers</h4>
                             <ul class="grid gap-0-5">
-                                ${outputs.map(output => html.node`<li class="increase-fee-receiver grid gap-1">
+                                ${Object.entries(uniqueReceivers).map(([address, value]) => html.node`<li class="increase-fee-receiver grid gap-1">
                                     <div>
                                         <div class="label">Address</div>
-                                        <b class="wrap-around">${output.address}</b>
+                                        <b class="wrap-around">${address}</b>
                                     </div>
                                     <div>
                                         <div class="label">Amount</div>
-                                        <b>${formatAmount(getConvertedAmount(output.value))}</b>
+                                        <b>${formatAmount(getConvertedAmount(value))}</b>
                                     </div>
                                 </li>`)}
                             </ul>
                         </div>
                         <div class="grid gap-0-5">
                             <p>
-                                Previous fee: <b>${formatAmount(getConvertedAmount(fee))}</b> ${recommendedFee ? html`| Recommended fee: <b>${formatAmount(getConvertedAmount(recommendedFee))}</b>` : ''}
+                                Previous fee: <b>${formatAmount(getConvertedAmount(previousFee))}</b> ${recommendedFee ? html`| Recommended fee: <b>${formatAmount(getConvertedAmount(recommendedFee))}</b>` : ''}
                             </p>
-                            <sm-input id="new_fee" placeholder="New fee" type="number" min=${getConvertedAmount(fee)} step="0.00000001" error-text=${`New fee should be greater than ${formatAmount(getConvertedAmount(fee))}`} animate required>
+                            <sm-input id="new_fee" placeholder="New fee" type="number" min=${getConvertedAmount(previousFee)} step="0.00000001" error-text=${`New fee should be greater than ${formatAmount(getConvertedAmount(previousFee))}`} animate required>
                                 <div class="currency-symbol flex" slot="icon"> </div>
                             </sm-input>
                         </div>
                         <div class="multi-state-button">
-                            <button id="increase_fee" class="button button--primary" onclick=${increaseFee} type="submit">Increase fee</button>
+                            <button id="increase_fee" class="button button--primary" onclick=${() => increaseFee(isMultisig)} type="submit">Increase fee</button>
                         </div>
                     </sm-form>
                 `)
@@ -2057,7 +2076,7 @@
                 buttonLoader(button, false)
             }
         }
-        function increaseFee() {
+        async function increaseFee(isMultisig = false) {
             buttonLoader(document.getElementById('increase_fee'), true)
             const newFee = parseFloat((parseFloat(document.getElementById('new_fee').value.trim()) / (globalExchangeRate[selectedCurrency] || 1)).toFixed(8))
             const privateKeys = []
@@ -2071,7 +2090,13 @@
                 }
             })
             console.log(changingFeeOf, newFee, privateKeys)
-            btcOperator.editFee(changingFeeOf, newFee, privateKeys).then(signedTxHex => {
+            try {
+                let signedTxHex
+                if (isMultisig) {
+                    signedTxHex = await btcOperator.editFee_corewallet(changingFeeOf, newFee, privateKeys)
+                } else {
+                    signedTxHex = await btcOperator.editFee(changingFeeOf, newFee, privateKeys)
+                }
                 btcOperator.broadcastTx(signedTxHex).then(txId => {
                     console.log(txId)
                     closePopup()
@@ -2083,17 +2108,11 @@
                     buttonLoader(document.getElementById('increase_fee'), false)
                     changingFeeOf = null
                 })
-            }).catch(e => {
+            } catch (err) {
                 notify(e, 'error')
                 buttonLoader(document.getElementById('increase_fee'), false)
-            })
+            }
         }
-        function extractLastHexStrings(arr) {
-            return arr
-                .filter(innerArray => innerArray.length > 0)
-                .map(innerArray => innerArray[innerArray.length - 1])
-        }
-
     </script>
 </body>
 
