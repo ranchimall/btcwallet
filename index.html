@@ -1998,7 +1998,7 @@
                     senders = btcOperator.extractLastHexStrings(details.witness).flatMap((hex) => {
                         const { address, required: requiredSignatures, pubKeys } = btcOperator.decodeRedeemScript(hex) || {}
                         console.log(btcOperator.decodeRedeemScript(hex))
-                        return pubKeys.map(pubKey => btcOperator.address(pubKey))
+                        return pubKeys.map(pubKey => btcOperator.bech32Address(pubKey))
                     })
                 } else {
                     senders = inputs.map(input => input.address)
