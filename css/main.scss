@@ -539,12 +539,12 @@ ol {
 #prompt_popup {
   flex-direction: column;
   h4 {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
   }
   sm-button {
     margin: 0;
   }
-  .flex {
+  & > .flex:last-of-type {
     padding: 0;
     margin-top: 1rem;
     sm-button:first-of-type {

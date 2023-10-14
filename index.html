@@ -23,10 +23,10 @@
     <sm-notifications id="notification_drawer"></sm-notifications>
     <sm-popup id="confirmation_popup">
         <h4 id="confirm_title"></h4>
-        <p id="confirm_message"></p>
-        <div class="flex align-center gap-0-3">
-            <button class="cancel-btn margin-left-auto">Cancel</button>
-            <button class="button button--primary submit-btn">OK</button>
+        <div id="confirm_message"></div>
+        <div class="flex align-center gap-0-5 margin-left-auto">
+            <button class="button cancel-button">Cancel</button>
+            <button class="button button--primary confirm-button">OK</button>
         </div>
     </sm-popup>
     <article id="loading_page">
@@ -409,7 +409,7 @@
                     <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
                 </svg>
                 <h3>Keep your keys safe!</h3>
-                <strong>Don't share with anyone. The private key cannot be recovered if lost.</strong>
+                <strong>Don't share with anyone. The private key cannot be recovered if lost.</strong>
             </div>
             <div id="generated_btc_addr" class="generated-id-card"></div>
         </div>
@@ -589,17 +589,18 @@
         const uiGlobals = {}
         const { html, svg, render: renderElem } = uhtml;
         const domRefs = {}
+        uiGlobals.connectionErrorNotification = []
         //Checks for internet connection status
         if (!navigator.onLine)
-            uiGlobals.connectionErrorNotification = notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error')
+            uiGlobals.connectionErrorNotification.push(notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error'))
         window.addEventListener('offline', () => {
-            uiGlobals.connectionErrorNotification = notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error')
+            uiGlobals.connectionErrorNotification.push(notify('There seems to be a problem connecting to the internet, Please check you internet connection.', 'error'))
         })
         window.addEventListener('online', () => {
-            if (uiGlobals.connectionErrorNotification)
-                getRef('notification_drawer').remove(uiGlobals.connectionErrorNotification)
+            uiGlobals.connectionErrorNotification.forEach(notification => {
+                getRef('notification_drawer').remove(notification)
+            })
             notify('We are back online.', 'success')
-            uiGlobals.connectionErrorNotification = null
         })
 
         // Use instead of document.getElementById
@@ -620,6 +621,32 @@
                     return domRefs[elementId].ref;
                 }
             }
+        }
+        // displays a popup for asking permission. Use this instead of JS confirm
+        const getConfirmation = (title, options = {}) => {
+            return new Promise(resolve => {
+                const { message = '', cancelText = 'Cancel', confirmText = 'OK', danger = false } = options
+                console.log(options)
+                openPopup('confirmation_popup', true)
+                getRef('confirm_title').innerText = title;
+                renderElem(getRef('confirm_message'), message);
+                const cancelButton = getRef('confirmation_popup').querySelector('.cancel-button');
+                const confirmButton = getRef('confirmation_popup').querySelector('.confirm-button')
+                confirmButton.textContent = confirmText
+                cancelButton.textContent = cancelText
+                if (danger)
+                    confirmButton.classList.add('button--danger')
+                else
+                    confirmButton.classList.remove('button--danger')
+                confirmButton.onclick = () => {
+                    closePopup()
+                    resolve(true);
+                }
+                cancelButton.onclick = () => {
+                    closePopup()
+                    resolve(false);
+                }
+            })
         }
         // Use when a function needs to be executed after user finishes changes
         const debounce = (callback, wait) => {
@@ -692,10 +719,10 @@
                     options.pinned = true
                     break;
             }
-            getRef("notification_drawer").push(message, { icon, ...options });
             if (mode === 'error') {
                 console.error(message)
             }
+            return getRef("notification_drawer").push(message, { icon, ...options });
         }
 
         function getFormattedTime(timestamp, format) {
@@ -1288,7 +1315,7 @@
                     icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
                 } else if (type === 'self') {
                     transactionReceiver = `Sent to self`;
-                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>`;
+                    icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="m19 8-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>`;
                 }
                 if (!block) {
                     icon = svg`<svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><path d="M6,2l0.01,6L10,12l-3.99,4.01L6,22h12v-6l-4-4l4-3.99V2H6z M16,16.5V20H8v-3.5l4-4L16,16.5z"/></g></svg>`;
@@ -1516,7 +1543,7 @@
             }
             if (!amount)
                 return '0';
-            return amount.toLocaleString(selectedCurrency === 'inr' ? `en-IN` : 'en-US', { style: 'currency', currency: selectedCurrency, maximumFractionDigits: selectedCurrency === 'btc' ? 8 : 2 })
+            return amount.toLocaleString(undefined, { style: 'currency', currency: selectedCurrency, maximumFractionDigits: selectedCurrency === 'btc' ? 8 : 2 })
         }
         let globalExchangeRate = {}
         async function getExchangeRate() {
@@ -1908,7 +1935,7 @@
         })
 
 
-        getRef('send_transaction').onclick = evt => {
+        getRef('send_transaction').onclick = async evt => {
             buttonLoader('send_transaction', true)
             const [senders, privKeys, receivers, amounts] = getTransactionInputs();
             let fee = null;
@@ -1921,7 +1948,38 @@
                 }
                 fee = parseFloat((parseFloat(feeInput) / (globalExchangeRate[selectedCurrency] || 1)).toFixed(8));
             }
-            console.log(senders, privKeys, receivers, amounts, fee);
+            console.log(senders, receivers, amounts, fee);
+            const confirmation = await getConfirmation('Confirm Transaction', {
+                message: html`
+                    <div class="grid gap-1-5">
+                        <div class="grid gap-0-5">
+                            <h5>Senders</h5>
+                            <ul class="flex flex-direction-column gap-0-5">
+                                ${senders.map(sender => html`<li class="wrap-around">${sender}</li>`)}
+                            </ul>
+                        </div>
+                        <div class="grid gap-0-5">
+                            <h5>Receivers</h5>
+                            <ul class="flex flex-direction-column gap-0-5">
+                                ${receivers.map((receiver, index) => html`<li class="wrap-around flex flex-direction-column gap-0-5" style="padding:0.5rem;border:solid thin rgba(var(--text-color),0.3);border-radius: 0.3rem;">
+                                    ${receiver} <span class="amount-shown">${formatAmount(getConvertedAmount(amounts[index]))}</span>
+                                </li>`)}
+                            </ul>
+                        </div>
+                        <div class="grid gap-0-5">
+                            <h5>Fee</h5>
+                            <div class="flex wrap-around gap-0-5">
+                                <span class="amount-shown">${formatAmount(getConvertedAmount(fee))}</span>
+                            </div>
+                        </div>
+                    </div>`,
+                confirmText: 'Confirm',
+                cancelText: 'Cancel'
+            })
+            if (!confirmation) {
+                buttonLoader('send_transaction', false)
+                return;
+            }
             btcOperator.sendTx(senders, privKeys, receivers, amounts, fee).then(txid => {
                 console.log(txid);
                 getRef('txid_popup__resolved_txid').value = txid;
