@@ -588,7 +588,6 @@
     <script id="ui_utils">
         const uiGlobals = {}
         const { html, svg, render: renderElem } = uhtml;
-        const domRefs = {}
         uiGlobals.connectionErrorNotification = []
         //Checks for internet connection status
         if (!navigator.onLine)
@@ -605,22 +604,7 @@
 
         // Use instead of document.getElementById
         function getRef(elementId) {
-            if (!domRefs.hasOwnProperty(elementId)) {
-                domRefs[elementId] = {
-                    count: 1,
-                    ref: null,
-                };
-                return document.getElementById(elementId);
-            } else {
-                if (domRefs[elementId].count < 3) {
-                    domRefs[elementId].count = domRefs[elementId].count + 1;
-                    return document.getElementById(elementId);
-                } else {
-                    if (!domRefs[elementId].ref)
-                        domRefs[elementId].ref = document.getElementById(elementId);
-                    return domRefs[elementId].ref;
-                }
-            }
+            return document.getElementById(elementId);
         }
         // displays a popup for asking permission. Use this instead of JS confirm
         const getConfirmation = (title, options = {}) => {
@@ -764,21 +748,6 @@
                 return timestamp;
             }
         }
-        // returns dom with specified element
-        function createElement(tagName, options = {}) {
-            const { className, textContent, innerHTML, attributes = {} } = options
-            const elem = document.createElement(tagName)
-            for (let attribute in attributes) {
-                elem.setAttribute(attribute, attributes[attribute])
-            }
-            if (className)
-                elem.className = className
-            if (textContent)
-                elem.textContent = textContent
-            if (innerHTML)
-                elem.innerHTML = innerHTML
-            return elem
-        }
         // detect browser version
         function detectBrowser() {
             let ua = navigator.userAgent,
@@ -863,7 +832,6 @@
                     addReceiverInput()
                     document.querySelectorAll('.currency-symbol').forEach(el => el.innerHTML = currencyIcons[selectedCurrency])
                 })
-
         });
         function createRipple(event, target) {
             const circle = document.createElement("span");
@@ -966,7 +934,7 @@
                 const previousActiveElementIndex = [...getRef('main_navbar').querySelectorAll('.nav-item')].indexOf(previousActiveElement)
                 const currentActiveElementIndex = [...getRef('main_navbar').querySelectorAll('.nav-item')].indexOf(currentActiveElement)
                 const isOnTop = previousActiveElementIndex < currentActiveElementIndex
-                const currentIndicator = createElement('div', { className: 'nav-item__indicator' });
+                const currentIndicator = html.node`<div class="nav-item__indicator"></div>`;
                 let previousIndicator = getRef('main_navbar').querySelector('.nav-item__indicator')
                 if (!previousIndicator) {
                     previousIndicator = currentIndicator.cloneNode(true)
@@ -1175,11 +1143,11 @@
             button.disabled = show;
             const animOptions = {
                 duration: 200,
-                fill: 'forwards',
+                fill: 'both',
                 easing: 'ease'
             }
             if (show) {
-                button.parentNode.append(createElement('sm-spinner'))
+                button.parentNode.append(document.createElement('sm-spinner'))
                 button.animate([
                     {
                         clipPath: 'circle(100%)',
@@ -1938,7 +1906,7 @@
         getRef('send_transaction').onclick = async evt => {
             buttonLoader('send_transaction', true)
             const [senders, privKeys, receivers, amounts] = getTransactionInputs();
-            let fee = null;
+            let fee = parseFloat(getRef('recommended_fee').dataset.btcAmount);
             if (getRef('fees_selector').value === 'custom') {
                 const feeInput = document.getElementById('send_fee').value.trim();
                 if (!feeInput || isNaN(feeInput) || feeInput <= 0) {
