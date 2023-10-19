@@ -22,15 +22,15 @@ Query parameters are parsed from the search parameters of the URL, if available.
 - Create sm-notifications thereafter
 - Create sm-popup
 
-- Then create <div id="main_card">
+- Then create `<div id="main_card">`
 
-- Then create <header></header> inside the main card
+- Then create `<header></header>` inside the main card
 
-- Then create <main id="pages_container" class="grid">
+- Then create `<main id="pages_container" class="grid">`
 
-- Then the first page <div id="check_details" class="page hidden">
-- Then the second page <div id="send" class="page">
-- Then the third page <div id="convert_key" class="page hidden flex flex-direction-column gap-1-5">
+- Then the first page `<div id="check_details" class="page hidden">`
+- Then the second page `<div id="send" class="page">`
+- Then the third page `<div id="convert_key" class="page hidden flex flex-direction-column gap-1-5">`
 
 
 - Inside a page
