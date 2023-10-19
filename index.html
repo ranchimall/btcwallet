@@ -12,11 +12,6 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
         rel="stylesheet">
-    <script src="scripts/components.js"></script>
-    <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
-    <script type="text/javascript" src="scripts/lib.js"></script>
-    <script src="scripts/floCrypto.js"></script>
-    <script type="text/javascript" src="scripts/btcOperator.js"></script>
 </head>
 
 <body class="hidden">
@@ -53,8 +48,8 @@
                 <theme-toggle></theme-toggle>
             </div>
         </header>
-        <main id="pages_container" class="grid">
-            <div id="check_details" class="page hidden">
+        <main id="pages_container" class="grid" data-scrollable>
+            <div id="check_details" class="page hidden" data-sm-containment>
                 <section class="flex gap-0-5 margin-bottom-1-5">
                     <button id="gen_new_addr_btn" class="button primary-action interact">
                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24"
@@ -126,7 +121,7 @@
                     <div id="tx_details" class="grid gap-2"></div>
                 </section>
             </div>
-            <div id="send" class="page hidden">
+            <div id="send" class="page hidden" data-sm-containment>
                 <sm-form id="send_tx" skip-submit>
                     <div class="margin-bottom-0-5">
                         <div class="flex align-center space-between margin-bottom-0-5">
@@ -176,11 +171,12 @@
                     </div>
                 </sm-form>
             </div>
-            <div id="convert_key" class="page hidden flex flex-direction-column gap-1-5">
+            <div id="convert_key" class="page hidden flex flex-direction-column gap-1-5" data-sm-containment>
                 <sm-chips id="conversion_type_selector" class="margin-right-auto"
                     onchange="changeConversionView(event)">
                     <sm-chip value="flo" selected>FLO</sm-chip>
                     <sm-chip value="btc">BTC</sm-chip>
+                    <sm-chip value="eth">ETH</sm-chip>
                 </sm-chips>
                 <div id="conversion_wrapper">
                     <div class="grid gap-2">
@@ -342,6 +338,70 @@
                                 </div>
                             </sm-form>
                             <div id="btc_address_converter_result"></div>
+                        </div>
+                    </div>
+                    <div class="grid gap-2 hidden">
+                        <div class="grid gap-1-5">
+                            <div class="grid gap-0-3">
+                                <h3>Private key converter</h3>
+                                <p>Convert private key of FLO/BTC blockchain to corresponding ETH address & private
+                                    key
+                                </p>
+                            </div>
+                            <sm-form id="convert_to_eth_private_key_form">
+                                <div class="input-action-wrapper">
+                                    <sm-input type="password" id="convert_to_eth_private_key_input"
+                                        class="password-field" placeholder="FLO/BTC private key" data-private-key
+                                        required animate>
+                                        <label slot="right" class="interact">
+                                            <input type="checkbox" class="hidden" autocomplete="off" readonly
+                                                onchange="togglePrivateKeyVisibility(this)">
+                                            <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                                viewBox="0 0 24 24" width="24px" fill="#000000">
+                                                <title>Hide password</title>
+                                                <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
+                                                    fill="none" />
+                                                <path
+                                                    d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                            </svg>
+                                            <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                                viewBox="0 0 24 24" width="24px" fill="#000000">
+                                                <title>Show password</title>
+                                                <path d="M0 0h24v24H0z" fill="none" />
+                                                <path
+                                                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                            </svg>
+                                        </label>
+                                    </sm-input>
+                                    <button type="submit" onclick="convertEthPrivateKey()"
+                                        class="button button--primary cta" disabled>Convert</button>
+                                </div>
+                            </sm-form>
+                            <div class="grid gap-0-5">
+                                <sm-input type="password" id="converted_eth_private_key" class="password-field"
+                                    placeholder="ETH private key" animate>
+                                    <label slot="right" class="interact">
+                                        <input type="checkbox" class="hidden" autocomplete="off" readonly
+                                            onchange="togglePrivateKeyVisibility(this)">
+                                        <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                            viewBox="0 0 24 24" width="24px" fill="#000000">
+                                            <title>Hide password</title>
+                                            <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
+                                                fill="none" />
+                                            <path
+                                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                        </svg>
+                                        <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
+                                            viewBox="0 0 24 24" width="24px" fill="#000000">
+                                            <title>Show password</title>
+                                            <path d="M0 0h24v24H0z" fill="none" />
+                                            <path
+                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                        </svg>
+                                    </label>
+                                </sm-input>
+                                <sm-input id="converted_eth_address" placeholder="ETH address" animate></sm-input>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -583,6 +643,14 @@
             </div>
         </fieldset>
     </template>
+    <script src="https://unpkg.com/uhtml@3.0.1/es.js"></script>
+    <script src="scripts/components.min.js"></script>
+    <script type="text/javascript" src="scripts/lib.js"></script>
+    <script src="scripts/floCrypto.js"></script>
+    <script type="text/javascript" src="scripts/btcOperator.js"></script>
+    <script src="scripts/tap_combined.js" type="text/javascript"></script>
+    <script src="scripts/keccak.js"></script>
+    <script src="scripts/floEthereum.js"></script>
     <script id="ui_utils">
         const uiGlobals = {}
         const { html, svg, render: renderElem } = uhtml;
@@ -608,7 +676,6 @@
         const getConfirmation = (title, options = {}) => {
             return new Promise(resolve => {
                 const { message = '', cancelText = 'Cancel', confirmText = 'OK', danger = false } = options
-                console.log(options)
                 openPopup('confirmation_popup', true)
                 getRef('confirm_title').innerText = title;
                 renderElem(getRef('confirm_message'), message);
@@ -1633,9 +1700,17 @@
             openPopup('generate_btc_addr_popup');
         });
         function retrieveBtcAddr() {
-            let wif = getRef('retrieve_btc_addr_field').value.trim();
-            getRef('recovered_btc_addr_wrapper').classList.remove('hidden')
-            getRef('recovered_btc_addr').value = btcOperator.bech32Address(wif);
+            function retrieve() {
+                let wif = getRef('retrieve_btc_addr_field').value.trim();
+                getRef('recovered_btc_addr_wrapper').classList.remove('hidden')
+                getRef('recovered_btc_addr').value = btcOperator.bech32Address(wif);
+            }
+            if (document.startViewTransition) {
+                document.startViewTransition(() => {
+                    retrieve()
+                })
+            } else
+                retrieve()
         }
 
         function togglePrivateKeyVisibility(input) {
@@ -1645,6 +1720,7 @@
         }
 
         function changeConversionView(e) {
+            const lastVisibleSectionIndex = [...getRef('conversion_wrapper').children].findIndex(el => !el.classList.contains('hidden'))
             switch (e.target.value) {
                 case 'flo':
                     showChildElement('conversion_wrapper', 0, {
@@ -1654,11 +1730,15 @@
                     break;
                 case 'btc':
                     showChildElement('conversion_wrapper', 1, {
+                        entry: lastVisibleSectionIndex > 1 ? slideInRight : slideInLeft,
+                        exit: lastVisibleSectionIndex > 1 ? slideOutRight : slideOutLeft
+                    })
+                    break;
+                case 'eth':
+                    showChildElement('conversion_wrapper', 2, {
                         entry: slideInLeft,
                         exit: slideOutLeft
                     })
-                    break;
-                default:
                     break;
             }
         }
@@ -1729,6 +1809,20 @@
         getRef('convert_btc_address_form').addEventListener('invalid', e => {
             renderElem(getRef('btc_address_converter_result'), html` `)
         })
+
+        function convertEthPrivateKey() {
+            const privateKey = getRef('convert_to_eth_private_key_input').value.trim();
+            let ethPrivateKey
+            if (/^[0-9a-fA-F]{64}$/.test(privateKey)) {
+                ethPrivateKey = privateKey
+            } else {
+                ethPrivateKey = coinjs.wif2privkey(privateKey).privkey
+            }
+            ethPrivateKey = floEthereum.ethPrivateKeyFromUntweakedPrivateKey(ethPrivateKey)
+            const ethAddress = floEthereum.ethAddressFromPrivateKey(ethPrivateKey)
+            getRef('converted_eth_address').value = ethAddress;
+            getRef('converted_eth_private_key').value = ethPrivateKey;
+        }
         const txParticipantsObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
                 if (mutation.type === 'childList') {

@@ -46,6 +46,7 @@
     }
 
     const broadcastTx = btcOperator.broadcastTx = rawTxHex => new Promise((resolve, reject) => {
+        console.log('txHex:', rawTxHex)
         let url = 'https://coinb.in/api/?uid=1&key=12345678901234567890123456789012&setmodule=bitcoin&request=sendrawtransaction';
         fetch(url, {
             method: 'POST',
@@ -64,7 +65,6 @@
                         let txid = resultText.match(/<txid>.*<\/txid>/).pop().replace('<txid>', '').replace('</txid>', '');
                         resolve(txid);
                     } else if (r == '0') {
-                        console.debug(resultText);
                         let error
                         if (resultText.includes('<message>')) {
                             error = resultText.match(/<message>.*<\/message>/).pop().replace('<message>', '').replace('</message>', '');
