@@ -7969,6 +7969,7 @@
                 //Adding Taproot output writing
                 if (addr.type == "bech32m") {
                     s.writeBytes(Crypto.util.hexToBytes(addr.outstring)); 
+                    s.buffer.shift(); //fix to remove the extra count byte coming in final txhex
                     return s;
                 }
 
