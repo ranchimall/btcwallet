@@ -241,7 +241,7 @@
                                     required></sm-input>
                             </div>
                         </div>
-                        <div class="grid gap-1">
+                        <div class="grid gap-1-5">
                             <div class="grid gap-0-3">
                                 <h3>Address converter</h3>
                                 <p class="panel-footer">Convert FLO address to BTC address</p>
@@ -322,7 +322,7 @@
                                 <sm-input id="converted_flo_address" placeholder="FLO address" animate></sm-input>
                             </div>
                         </div>
-                        <div class="grid gap-1">
+                        <div class="grid gap-1-5">
                             <div class="grid gap-0-3">
                                 <h3>Address converter</h3>
                                 <p class="panel-footer">Convert BTC address to FLO address</p>
@@ -1804,7 +1804,6 @@
             } else {
                 ethPrivateKey = coinjs.wif2privkey(privateKey).privkey
             }
-            ethPrivateKey = floEthereum.ethPrivateKeyFromUntweakedPrivateKey(ethPrivateKey)
             const ethAddress = floEthereum.ethAddressFromPrivateKey(ethPrivateKey)
             getRef('converted_eth_address').value = ethAddress;
             getRef('converted_eth_private_key').value = ethPrivateKey;
