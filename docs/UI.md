@@ -16,3 +16,71 @@ Query parameters are parsed from the search parameters of the URL, if available.
 - Updating pagesData.lastPage:
   1. Updates the lastPage property of pagesData to keep track of the last visited page.
 
+## UI Page Flow
+- Linking scripts are added first
+
+- Create sm-notifications thereafter
+- Create sm-popup
+
+- Then create <div id="main_card">
+
+- Then create <header></header> inside the main card
+
+- Then create <main id="pages_container" class="grid">
+
+- Then the first page <div id="check_details" class="page hidden">
+- Then the second page <div id="send" class="page">
+- Then the third page <div id="convert_key" class="page hidden flex flex-direction-column gap-1-5">
+
+
+- Inside a page
+  1. Fieldsets
+  2. Input inside it
+  3. Then button <button type="submit" onclick="convertBtcPrivateKey()" class="button button--primary cta" disabled="">Convert</button>
+
+- Clicking a button will lead to action <button type="submit" onclick="convertBtcPrivateKey()" 
+
+- Everything happens through clicking
+
+```javascript
+  <button id="convert_to_flo" class="button--primary justify-self-center cta" type="submit" disabled="">
+                                        Convert
+                                    </button>
+
+<div id="btc_address_converter_result"></div>
+
+ getRef('convert_to_flo').onclick = evt => {
+            const btc_bech = getRef('convert_btc_input').value.trim();
+            if (btc_bech === '') {
+                getRef('convert_btc_input').focusIn()
+                return notify('Please enter BTC address', 'error');
+            }
+
+```
+
+- Or we can add eventlisteners from Javascript side
+- We add eventListeners to any id
+```javascript
+        getRef('convert_btc_private_key_form').addEventListener('invalid', e => {
+            getRef('flo_private').value = '';
+            getRef('converted_flo_address').value = '';
+        })
+```
+
+- Then the navbar
+` <nav id="main_navbar">`
+- Navbar goes into bottom of the page
+
+- Then you place your popups
+```
+<sm-popup id="txid_popup">
+
+getRef('txid_popup__resolved_txid').value = txid;
+openPopup('txid_popup', true);
+```
+
+- Now there is <script id="ui_utils"> this is the script with UI Javascript logic
+
+- And finally the <script></script> with actual business logic
+ 
+- Attach eventlisteners to different buttons, and handle them as per the busines logic
