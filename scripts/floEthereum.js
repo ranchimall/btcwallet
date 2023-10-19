@@ -12,8 +12,8 @@ const ethAddressFromPrivateKey = floEthereum.ethAddressFromPrivateKey = function
     var t1,t1_x,t1_y,t1_y_BigInt,t2,t3,t4;
     var groupOrder = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");	
 
-    t1 = bitjs.newPubkey(privateKey);	    t1 = bitjs.newPubkey(privateKey);
-    t1_x = t1.slice(2, 66); t1_y = t1.slice(-64);	    t1_x = t1.slice(2, 66); t1_y = t1.slice(-64);
+    t1 = bitjs.newPubkey(privateKey);
+    t1_x = t1.slice(2, 66); t1_y = t1.slice(-64);
     if (onlyEvenY) {	
         t1_y_BigInt = BigInt("0x"+t1_y); 	
         if (t1_y_BigInt % 2n !== 0n) { t1_y_BigInt = (groupOrder-t1_y_BigInt)%groupOrder; t1_y=t1_y_BigInt.toString(16)
