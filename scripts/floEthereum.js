@@ -4,7 +4,6 @@
     'use strict';
     const floEthereum = EXPORTS;
 
-// onlyEvenY is usually false. It is needed to be true only when taproot private keys are input
 const ethAddressFromPrivateKey = floEthereum.ethAddressFromPrivateKey = function(privateKey, onlyEvenY = false){
     var t1,t1_x,t1_y,t2,t3,t4;
     t1 = bitjs.newPubkey(privateKey);
