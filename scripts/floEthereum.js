@@ -4,12 +4,13 @@
     'use strict';
     const floEthereum = EXPORTS;
 
-const ethAddressFromPrivateKey = floEthereum.ethAddressFromPrivateKey = function(privateKey){
-    var t1,t2,t3,t4;
-
-    t1 = secp.Point.fromPrivateKey(hex.decode(privateKey));
-    if (!t1.hasEvenY()) { t1 = t1.negate(); }
-    t2 = t1.x.toString(16) + t1.y.toString(16);
+// onlyEvenY is usually false. It is needed to be true only when taproot private keys are input
+const ethAddressFromPrivateKey = floEthereum.ethAddressFromPrivateKey = function(privateKey, onlyEvenY = false){
+    var t1,t1_x,t1_y,t2,t3,t4;
+    t1 = bitjs.newPubkey(privateKey);
+    t1_x = t1.slice(2, 66); t1_y = t1.slice(-64);
+           
+    t2 = t1_x.toString(16) + t1_y.toString(16);
     t3 = keccak.keccak_256(Crypto.util.hexToBytes(t2));
     t4 = keccak.extractLast20Bytes(t3);
     return "0x" + t4;
@@ -24,28 +25,13 @@ const ethAddressFromCompressedPublicKey = floEthereum.ethAddressFromCompressedPu
     return "0x" + t4; 
 }
 
-const ethPrivateKeyFromUntweakedPrivateKey = floEthereum.ethPrivateKeyFromUntweakedPrivateKey = function(untweakedPrivateKey) {
-    var t1;
-    t1 = hex.encode(taproot.taprootTweakPrivKey(hex.decode(untweakedPrivateKey)));
-    return t1;
-}
-
-const ethAddressFromUntweakedPrivateKey = floEthereum.ethAddressFromUntweakedPrivateKey = function(untweakedPrivateKey) {
-    var t1,t2;
-    t1 = hex.encode(taproot.taprootTweakPrivKey(hex.decode(untweakedPrivateKey)));
-    t2 = ethAddressFromPrivateKey(t1);
-    return t2;
-}
-
-const ethAddressFromTaprootAddress = floEthereum.ethAddressFromTaprootAddress = function(taprootAddress) {
+const ethAddressFromUncompressedPublicKey = floEthereum.ethAddressFromUncompressedPublicKey = function(unCompressedPublicKey){
     var t1,t2,t3,t4;
-    t1 = coinjs.addressDecode(taprootAddress);
-    t2 = t1.outstring.slice(4);
-    t3 = "02" + t2;
-    t4 = ethAddressFromCompressedPublicKey(t3);
-    return t4;
-}
-
-
+    t1 = unCompressedPublicKey;
+    t2 = t1.slice(2);
+    t3 = keccak.keccak_256(Crypto.util.hexToBytes(t2));
+    t4 = keccak.extractLast20Bytes(t3);
+    return "0x" + t4; 
+}    
 
 })('object' === typeof module ? module.exports : window.floEthereum = {});
