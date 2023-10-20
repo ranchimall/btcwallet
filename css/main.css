@@ -88,7 +88,7 @@ button,
   font-weight: 500;
   white-space: nowrap;
   padding: 0.8rem;
-  border-radius: 0.3rem;
+  border-radius: 0.5rem;
   justify-content: center;
   flex-shrink: 0;
 }
@@ -192,7 +192,7 @@ details[open] > summary .down-arrow {
 sm-input,
 sm-textarea {
   width: 100%;
-  --border-radius: 0.4rem;
+  --border-radius: 0.5rem;
   --background-color: rgba(var(--foreground-color), 1);
 }
 sm-input button .icon,
@@ -235,13 +235,13 @@ sm-option {
 sm-chips {
   --gap: 0;
   background-color: rgba(var(--text-color), 0.06);
-  border-radius: 0.3rem;
+  border-radius: 0.5rem;
   padding: 0.3rem;
 }
 
 sm-chip {
   font-size: 0.9rem;
-  --border-radius: 0.2rem;
+  --border-radius: 0.3rem;
   -webkit-user-select: none;
      -moz-user-select: none;
           user-select: none;
@@ -1149,6 +1149,21 @@ ol li::before {
     flex: 1;
   }
 }
+#conversion_view_selector {
+  margin-right: auto;
+  font-weight: 500;
+}
+
+.converted-card:not(:empty) {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: rgba(var(--text-color), 0.03);
+}
+.converted-card:not(:empty) sm-copy {
+  font-weight: 500;
+  color: rgba(var(--text-color), 0.9);
+}
+
 @media screen and (max-width: 40rem) {
   #main_navbar.hide-away {
     bottom: 0;
@@ -1214,10 +1229,10 @@ ol li::before {
 #retrieve_btc_addr_popup {
     --width: 28rem;
   }
-  #convert_key {
+  #convert {
     width: min(72rem, 100%);
   }
-  #conversion_wrapper > * {
+  #key_conversion_content {
     grid-template-columns: 1fr 1fr;
     align-items: flex-start;
   }

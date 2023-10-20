@@ -171,240 +171,13 @@
                     </div>
                 </sm-form>
             </div>
-            <div id="convert_key" class="page hidden flex flex-direction-column gap-1-5" data-sm-containment>
-                <sm-chips id="conversion_type_selector" class="margin-right-auto"
-                    onchange="changeConversionView(event)">
+            <div id="convert" class="page hidden flex flex-direction-column gap-1-5" data-sm-containment>
+                <sm-chips id="conversion_view_selector" onchange="handleConversionRouteChange(event)">
                     <sm-chip value="flo" selected>FLO</sm-chip>
                     <sm-chip value="btc">BTC</sm-chip>
                     <sm-chip value="eth">ETH</sm-chip>
                 </sm-chips>
-                <div id="conversion_wrapper">
-                    <div class="grid gap-2">
-                        <div class="grid gap-1-5">
-                            <div class="grid gap-0-3">
-                                <h3>Private key converter</h3>
-                                <p>Convert private key of FLO blockchain to corresponding BTC address & private key
-                                </p>
-                            </div>
-                            <sm-form id="convert_flo_private_key_form">
-                                <div class="input-action-wrapper">
-                                    <sm-input type="password" id="convert_flo_private_key" class="password-field"
-                                        placeholder="FLO private key" data-private-key required animate>
-                                        <label slot="right" class="interact">
-                                            <input type="checkbox" class="hidden" autocomplete="off" readonly
-                                                onchange="togglePrivateKeyVisibility(this)">
-                                            <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                                <title>Hide password</title>
-                                                <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
-                                                    fill="none" />
-                                                <path
-                                                    d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                                            </svg>
-                                            <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                                <title>Show password</title>
-                                                <path d="M0 0h24v24H0z" fill="none" />
-                                                <path
-                                                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                                            </svg>
-                                        </label>
-                                    </sm-input>
-                                    <button type="submit" onclick="convertFloPrivateKey()"
-                                        class="button button--primary cta">Convert</button>
-                                </div>
-                            </sm-form>
-                            <div class="grid gap-0-5">
-                                <sm-input type="password" id="btc_private" class="password-field"
-                                    placeholder="BTC private key" animate>
-                                    <label slot="right" class="interact">
-                                        <input type="checkbox" class="hidden" autocomplete="off" readonly
-                                            onchange="togglePrivateKeyVisibility(this)">
-                                        <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                            viewBox="0 0 24 24" width="24px" fill="#000000">
-                                            <title>Hide password</title>
-                                            <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
-                                                fill="none" />
-                                            <path
-                                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                                        </svg>
-                                        <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                            viewBox="0 0 24 24" width="24px" fill="#000000">
-                                            <title>Show password</title>
-                                            <path d="M0 0h24v24H0z" fill="none" />
-                                            <path
-                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                                        </svg>
-                                    </label>
-                                </sm-input>
-                                <sm-input id="priv_key_bech32" placeholder="BTC address" data-btc-address animate
-                                    required></sm-input>
-                            </div>
-                        </div>
-                        <div class="grid gap-1-5">
-                            <div class="grid gap-0-3">
-                                <h3>Address converter</h3>
-                                <p class="panel-footer">Convert FLO address to BTC address</p>
-                            </div>
-                            <sm-form id="convert_flo_address_form" class="flex align-items-start">
-                                <div class="input-action-wrapper">
-                                    <sm-input id="convert_flo_input" placeholder="FLO Address" data-flo-address
-                                        error-text="Invalid FLO address. It usually starts with 'F'" animate
-                                        required></sm-input>
-                                    <button id="convert_to_btc" class="button--primary justify-self-center cta"
-                                        type="submit">
-                                        Convert
-                                    </button>
-                                </div>
-                            </sm-form>
-                            <div id="flo_address_converter_result"></div>
-                        </div>
-                    </div>
-                    <div class="grid gap-2 hidden">
-                        <div class="grid gap-1-5">
-                            <div class="grid gap-0-3">
-                                <h3>Private key converter</h3>
-                                <p>Convert private key of BTC blockchain to corresponding FLO address & private
-                                    key
-                                </p>
-                            </div>
-                            <sm-form id="convert_btc_private_key_form">
-                                <div class="input-action-wrapper">
-                                    <sm-input type="password" id="convert_btc_private_key" class="password-field"
-                                        placeholder="BTC private key" data-private-key required animate>
-                                        <label slot="right" class="interact">
-                                            <input type="checkbox" class="hidden" autocomplete="off" readonly
-                                                onchange="togglePrivateKeyVisibility(this)">
-                                            <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                                <title>Hide password</title>
-                                                <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
-                                                    fill="none" />
-                                                <path
-                                                    d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                                            </svg>
-                                            <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                                <title>Show password</title>
-                                                <path d="M0 0h24v24H0z" fill="none" />
-                                                <path
-                                                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                                            </svg>
-                                        </label>
-                                    </sm-input>
-                                    <button type="submit" onclick="convertBtcPrivateKey()"
-                                        class="button button--primary cta">Convert</button>
-                                </div>
-                            </sm-form>
-                            <div class="grid gap-0-5">
-                                <sm-input type="password" id="flo_private" class="password-field"
-                                    placeholder="FLO private key" animate>
-                                    <label slot="right" class="interact">
-                                        <input type="checkbox" class="hidden" autocomplete="off" readonly
-                                            onchange="togglePrivateKeyVisibility(this)">
-                                        <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                            viewBox="0 0 24 24" width="24px" fill="#000000">
-                                            <title>Hide password</title>
-                                            <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
-                                                fill="none" />
-                                            <path
-                                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                                        </svg>
-                                        <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                            viewBox="0 0 24 24" width="24px" fill="#000000">
-                                            <title>Show password</title>
-                                            <path d="M0 0h24v24H0z" fill="none" />
-                                            <path
-                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                                        </svg>
-                                    </label>
-                                </sm-input>
-                                <sm-input id="converted_flo_address" placeholder="FLO address" animate></sm-input>
-                            </div>
-                        </div>
-                        <div class="grid gap-1-5">
-                            <div class="grid gap-0-3">
-                                <h3>Address converter</h3>
-                                <p class="panel-footer">Convert BTC address to FLO address</p>
-                            </div>
-                            <sm-form id="convert_btc_address_form" class="flex">
-                                <div class="input-action-wrapper">
-                                    <sm-input id="convert_btc_input" placeholder="BTC Address" data-btc-address animate
-                                        required></sm-input>
-                                    <button id="convert_to_flo" class="button--primary justify-self-center cta"
-                                        type="submit">
-                                        Convert
-                                    </button>
-                                </div>
-                            </sm-form>
-                            <div id="btc_address_converter_result"></div>
-                        </div>
-                    </div>
-                    <div class="grid gap-2 hidden">
-                        <div class="grid gap-1-5">
-                            <div class="grid gap-0-3">
-                                <h3>Private key converter</h3>
-                                <p>Convert private key of FLO/BTC blockchain to corresponding ETH address & private
-                                    key
-                                </p>
-                            </div>
-                            <sm-form id="convert_to_eth_private_key_form">
-                                <div class="input-action-wrapper">
-                                    <sm-input type="password" id="convert_to_eth_private_key_input"
-                                        class="password-field" placeholder="FLO/BTC private key" data-private-key
-                                        required animate>
-                                        <label slot="right" class="interact">
-                                            <input type="checkbox" class="hidden" autocomplete="off" readonly
-                                                onchange="togglePrivateKeyVisibility(this)">
-                                            <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                                <title>Hide password</title>
-                                                <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
-                                                    fill="none" />
-                                                <path
-                                                    d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                                            </svg>
-                                            <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                                viewBox="0 0 24 24" width="24px" fill="#000000">
-                                                <title>Show password</title>
-                                                <path d="M0 0h24v24H0z" fill="none" />
-                                                <path
-                                                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                                            </svg>
-                                        </label>
-                                    </sm-input>
-                                    <button type="submit" onclick="convertEthPrivateKey()"
-                                        class="button button--primary cta" disabled>Convert</button>
-                                </div>
-                            </sm-form>
-                            <div class="grid gap-0-5">
-                                <sm-input type="password" id="converted_eth_private_key" class="password-field"
-                                    placeholder="ETH private key" animate>
-                                    <label slot="right" class="interact">
-                                        <input type="checkbox" class="hidden" autocomplete="off" readonly
-                                            onchange="togglePrivateKeyVisibility(this)">
-                                        <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                            viewBox="0 0 24 24" width="24px" fill="#000000">
-                                            <title>Hide password</title>
-                                            <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z"
-                                                fill="none" />
-                                            <path
-                                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                                        </svg>
-                                        <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px"
-                                            viewBox="0 0 24 24" width="24px" fill="#000000">
-                                            <title>Show password</title>
-                                            <path d="M0 0h24v24H0z" fill="none" />
-                                            <path
-                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                                        </svg>
-                                    </label>
-                                </sm-input>
-                                <sm-input id="converted_eth_address" placeholder="ETH address" animate></sm-input>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="key_conversion_content" class="grid gap-1-5"></div>
             </div>
         </main>
         <nav id="main_navbar">
@@ -431,10 +204,11 @@
                         </svg>
                         <span class="nav-item__title">
                             Send
-                        </span></a>
+                        </span>
+                    </a>
                 </li>
                 <li>
-                    <a href="#/convert_key" class="nav-item interactive">
+                    <a href="#/convert" class="nav-item interactive">
                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24"
                             width="24px" fill="#000000">
                             <path d="M0 0h24v24H0z" fill="none"></path>
@@ -442,7 +216,8 @@
                         </svg>
                         <span class="nav-item__title">
                             Convert
-                        </span></a>
+                        </span>
+                    </a>
                 </li>
             </ul>
         </nav>
@@ -832,7 +607,6 @@
                 notify('Browser is not fully compatible, some features may not work. for best experience please use Chrome, Edge, Firefox or Safari', 'error')
             }
             document.body.classList.remove('hidden')
-            document.querySelectorAll('sm-input[data-flo-address]').forEach(input => input.customValidation = (value) => { return { isValid: floCrypto.validateFloID(value) } })
             document.addEventListener('keyup', (e) => {
                 if (e.key === 'Escape') {
                     closePopup()
@@ -947,6 +721,9 @@
                         getRef('search_query_input').focusIn()
                     }, 200);
                     break;
+                case 'convert':
+                    renderConversionPage(params.from)
+                    break
             }
             const animOptions = {
                 duration: 100,
@@ -1309,6 +1086,16 @@
     <script>
         window.smCompConfig = {
             'sm-input': [
+                {
+                    selector: '[data-flo-address]',
+                    customValidation: (value) => {
+                        if (!value) return { isValid: false, errorText: 'Please enter a FLO address' }
+                        return {
+                            isValid: floCrypto.validateFloID(value),
+                            errorText: `Invalid FLO address.<br> It usually starts with "F"`
+                        }
+                    }
+                },
                 {
                     selector: '[data-btc-address]',
                     customValidation: (value) => {
@@ -1703,109 +1490,169 @@
             target.type = target.type === 'password' ? 'text' : 'password';
             target.focusIn()
         }
-
-        function changeConversionView(e) {
-            const lastVisibleSectionIndex = [...getRef('conversion_wrapper').children].findIndex(el => !el.classList.contains('hidden'))
-            switch (e.target.value) {
+        function handleConversionRouteChange(e) {
+            location.hash = `#/convert?from=${e.target.value}`
+        }
+        function renderConversionPage(convertingFrom = 'flo') {
+            let privateKeyConversionDescription = '';
+            let addressConversionDescription = null;
+            let addressForConversion = ''
+            switch (convertingFrom) {
                 case 'flo':
-                    showChildElement('conversion_wrapper', 0, {
-                        entry: slideInRight,
-                        exit: slideOutRight
-                    })
+                    privateKeyConversionDescription = 'Convert FLO private key to corresponding BTC | ETH address & private key';
+                    addressConversionDescription = 'Convert FLO address to BTC address';
+                    addressForConversion = html`<sm-input id="address_for_conversion" placeholder="FLO Address" data-flo-address animate required></sm-input>`
                     break;
                 case 'btc':
-                    showChildElement('conversion_wrapper', 1, {
-                        entry: lastVisibleSectionIndex > 1 ? slideInRight : slideInLeft,
-                        exit: lastVisibleSectionIndex > 1 ? slideOutRight : slideOutLeft
-                    })
+                    privateKeyConversionDescription = 'Convert BTC private key to corresponding FLO | ETH address & private key';
+                    addressConversionDescription = 'Convert BTC address to FLO address';
+                    addressForConversion = html`<sm-input id="address_for_conversion" placeholder="BTC Address" data-btc-address animate required></sm-input>`
                     break;
                 case 'eth':
-                    showChildElement('conversion_wrapper', 2, {
-                        entry: slideInLeft,
-                        exit: slideOutLeft
-                    })
+                    privateKeyConversionDescription = 'Convert ETH private key to corresponding FLO | BTC address & private key';
                     break;
             }
+            renderElem(getRef('key_conversion_content'), html.for(getRef('key_conversion_content'), convertingFrom)/*html*/`
+                <div class="grid gap-1-5">
+                    <div class="grid gap-0-3">
+                        <h3>Private key converter</h3>
+                        <p>${privateKeyConversionDescription}</p>
+                    </div>
+                    <sm-form oninvalid=${() => renderElem(getRef('private_key_conversion_result'), html``)}>
+                        <div class="input-action-wrapper">
+                            <sm-input type="password" id="private_key_for_conversion" class="password-field" placeholder=${`${convertingFrom.toUpperCase()} private key`} data-private-key required animate>
+                                <label slot="right" class="interact">
+                                    <input type="checkbox" class="hidden" autocomplete="off" readonly onchange="togglePrivateKeyVisibility(this)">
+                                    <svg class="icon invisible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Hide password</title> <path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none" /> <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" /> </svg>
+                                    <svg class="icon visible" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"> <title>Show password</title> <path d="M0 0h24v24H0z" fill="none" /> <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" /> </svg>
+                                </label>
+                            </sm-input>
+                            <button type="submit" onclick=${() => convertPrivateKey(convertingFrom)} class="button button--primary cta" disabled>Convert</button>
+                        </div>
+                    </sm-form>
+                    <ul id="private_key_conversion_result" class="grid gap-0-5"></ul>
+                </div>
+                ${addressConversionDescription ? html`
+                    <div class="grid gap-1-5">
+                        <div class="grid gap-0-3">
+                            <h3>Address converter</h3>
+                            <p class="panel-footer">${addressConversionDescription}</p>
+                        </div>  
+                        <sm-form class="flex" oninvalid=${() => renderElem(getRef('address_conversion_result'), html``)}>
+                            <div class="input-action-wrapper">
+                                ${addressForConversion}
+                                <button class="button--primary justify-self-center cta" onclick=${() => convertAddress(convertingFrom)} type="submit" disabled>
+                                    Convert
+                                </button>
+                            </div>
+                        </sm-form>
+                        <div id="address_conversion_result" class="converted-card"></div>
+                    </div>
+                `: ''}
+            `)
         }
-        function convertFloPrivateKey() {
-            const source_wif = getRef('convert_flo_private_key').value.trim();
-            const btc_wif = btcOperator.convert.wif(source_wif);
-            getRef('btc_private').value = btc_wif;
-            getRef('priv_key_bech32').value = btcOperator.bech32Address(btc_wif);
-        }
-        getRef('convert_flo_private_key_form').addEventListener('invalid', e => {
-            getRef('btc_private').value = '';
-            getRef('priv_key_bech32').value = '';
-        })
-        getRef('convert_to_btc').onclick = evt => {
+        function convertPrivateKey(convertFrom) {
+            let keyToConvert = getRef('private_key_for_conversion').value.trim();
+            if (/^[0-9a-fA-F]{64}$/.test(keyToConvert)) {
+                keyToConvert = coinjs.privkey2wif(keyToConvert)
+            }
+            let convertedToFloPrivateKey
+            let convertedToFloAddress
+            let convertedToBtcPrivateKey
+            let convertedToBtcAddress
+            let convertedToEthPrivateKey
+            let convertedToEthAddress
             try {
-                const flo_addr = getRef('convert_flo_input').value.trim();
-                const convertedAddress = btcOperator.convert.legacy2bech(flo_addr);
-                renderElem(getRef('flo_address_converter_result'), html`
-                    <span class="label">Converted BTC Address</span>
+                switch (convertFrom) {
+                    case 'flo':
+                        convertedToBtcPrivateKey = btcOperator.convert.wif(keyToConvert)
+                        convertedToBtcAddress = btcOperator.bech32Address(convertedToBtcPrivateKey);
+                        convertedToEthPrivateKey = coinjs.wif2privkey(keyToConvert).privkey;
+                        convertedToEthAddress = floEthereum.ethAddressFromPrivateKey(convertedToEthPrivateKey)
+                        break;
+                    case 'btc':
+                        convertedToFloPrivateKey = btcOperator.convert.wif(keyToConvert, bitjs.priv)
+                        convertedToFloAddress = floCrypto.getFloID(convertedToFloPrivateKey);
+                        convertedToEthPrivateKey = coinjs.wif2privkey(keyToConvert).privkey;
+                        convertedToEthAddress = floEthereum.ethAddressFromPrivateKey(convertedToEthPrivateKey)
+                        break;
+                    case 'eth':
+                        convertedToBtcPrivateKey = btcOperator.convert.wif(keyToConvert)
+                        convertedToBtcAddress = btcOperator.bech32Address(convertedToBtcPrivateKey);
+                        convertedToFloPrivateKey = keyToConvert
+                        convertedToFloAddress = floCrypto.getFloID(convertedToFloPrivateKey);
+                        break;
+                }
+                renderElem(getRef('private_key_conversion_result'), html`
+                    ${convertedToFloPrivateKey ? html`
+                        <li class="grid gap-1 converted-card">
+                            <div class="grid">
+                                <span class="label">FLO Address</span>
+                                <sm-copy value="${convertedToFloAddress}"></sm-copy>
+                            </div>
+                            <div class="grid">
+                                <span class="label">FLO Private Key</span>
+                                <sm-copy value="${convertedToFloPrivateKey}"></sm-copy>
+                            </div>
+                        </li>
+                    `: ''}
+                    ${convertedToBtcPrivateKey ? html`
+                        <li class="grid gap-1 converted-card">
+                            <div class="grid">
+                                <span class="label">BTC Address</span>
+                                <sm-copy value="${convertedToBtcAddress}"></sm-copy>
+                            </div>
+                            <div class="grid">
+                                <span class="label">BTC Private Key</span>
+                                <sm-copy value="${convertedToBtcPrivateKey}"></sm-copy>
+                            </div>
+                        </li>
+                    `: ''}
+                    ${convertedToEthPrivateKey ? html`
+                        <li class="grid gap-1 converted-card">
+                            <div class="grid">
+                                <span class="label">ETH Address</span>
+                                <sm-copy value="${convertedToEthAddress}"></sm-copy>
+                            </div>
+                            <div class="grid">
+                                <span class="label">ETH Private Key</span>
+                                <sm-copy value="${convertedToEthPrivateKey}"></sm-copy>
+                            </div>
+                        </li>
+                    `: ''}
+                `)
+            } catch (err) {
+                notify('Invalid private key', 'error')
+                renderElem(getRef('private_key_conversion_result'), html``)
+            }
+        }
+        function convertAddress(convertFrom) {
+            const addressToConvert = getRef('address_for_conversion').value.trim();
+            let convertedAddress
+            let convertedTo
+            try {
+                switch (convertFrom) {
+                    case 'flo':
+                        convertedAddress = btcOperator.convert.legacy2bech(addressToConvert);
+                        convertedTo = 'BTC'
+                        break;
+                    case 'btc':
+                        convertedAddress = floCrypto.getFloID(addressToConvert);
+                        convertedTo = 'FLO'
+                        break;
+                }
+                if (convertedAddress === addressToConvert) {
+                    notify('Address is already converted', 'error')
+                    return;
+                }
+                renderElem(getRef('address_conversion_result'), html`
+                    <span class="label">${convertedTo} Address</span>
                     <sm-copy value="${convertedAddress}"></sm-copy>
                 `)
             } catch (err) {
-                renderElem(getRef('flo_address_converter_result'), html` `)
-                notify('Invalid FLO address', 'error')
+                notify('Invalid address', 'error')
+                renderElem(getRef('address_conversion_result'), html``)
             }
-        }
-        getRef('convert_flo_address_form').addEventListener('invalid', e => {
-            renderElem(getRef('flo_address_converter_result'), html` `)
-        })
-        function convertBtcPrivateKey() {
-            const source_wif = getRef('convert_btc_private_key').value.trim();
-            const flo_wif = btcOperator.convert.wif(source_wif, bitjs.priv);
-            getRef('flo_private').value = flo_wif;
-            getRef('converted_flo_address').value = floCrypto.getFloID(flo_wif);
-        }
-        getRef('convert_btc_private_key_form').addEventListener('invalid', e => {
-            getRef('flo_private').value = '';
-            getRef('converted_flo_address').value = '';
-        })
-        getRef('convert_to_flo').onclick = evt => {
-            const btc_bech = getRef('convert_btc_input').value.trim();
-            if (btc_bech === '') {
-                getRef('convert_btc_input').focusIn()
-                return notify('Please enter BTC address', 'error');
-            }
-            const type = coinjs.addressDecode(btc_bech).type
-            let convertedAddress
-            if (type === 'standard') {
-                convertedAddress = btcOperator.convert.legacy2legacy(btc_bech, 0x23);
-            } else if (type === 'bech32') {
-                convertedAddress = btcOperator.convert.bech2legacy(btc_bech, 0x23);
-            } else {
-                try {
-                    convertedAddress = floCrypto.toMultisigFloID(btc_bech)
-                } catch (e) {
-                    notify(`Multisig address can't be converted to FLO`, 'error');
-                }
-            }
-            if (convertedAddress) {
-                renderElem(getRef('btc_address_converter_result'), html`
-                    <span class="label">Converted FLO Address</span>
-                    <sm-copy value="${convertedAddress}"></sm-copy>
-                `)
-            } else {
-                renderElem(getRef('btc_address_converter_result'), html` `)
-            }
-        }
-        getRef('convert_btc_address_form').addEventListener('invalid', e => {
-            renderElem(getRef('btc_address_converter_result'), html` `)
-        })
-
-        function convertEthPrivateKey() {
-            const privateKey = getRef('convert_to_eth_private_key_input').value.trim();
-            let ethPrivateKey
-            if (/^[0-9a-fA-F]{64}$/.test(privateKey)) {
-                ethPrivateKey = privateKey
-            } else {
-                ethPrivateKey = coinjs.wif2privkey(privateKey).privkey
-            }
-            const ethAddress = floEthereum.ethAddressFromPrivateKey(ethPrivateKey)
-            getRef('converted_eth_address').value = ethAddress;
-            getRef('converted_eth_private_key').value = ethPrivateKey;
         }
         const txParticipantsObserver = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
