@@ -1136,7 +1136,7 @@
                         }
                         return {
                             isValid: parseFloat(value) >= minValidAmount[selectedCurrency],
-                            errorText: `Amount must be greater than ${formatAmount(minValidAmount[selectedCurrency])} ${selectedCurrency.toUpperCase()}`
+                            errorText: `Amount must be greater than ${getConvertedAmount(minValidAmount[selectedCurrency], true)} ${selectedCurrency.toUpperCase()}`
                         }
                     }
                 }
@@ -1175,7 +1175,7 @@
                         <div class="grid gap-0-5">
                             <div class="flex gap-0-5 space-between align-center flex-wrap">
                                 <time class="transaction__time">${getFormattedTime(time)}</time>
-                                <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${formatAmount(getConvertedAmount(amount))}</div>
+                                <div class="transaction__amount amount-shown" data-btc-amount="${amount}">${getConvertedAmount(amount, true)}</div>
                             </div>
                             <div class="transaction__receiver">
                                 ${transactionReceiver}
@@ -1211,7 +1211,7 @@
                     getRef('transactions_list').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
                     getRef('address_balance').innerHTML = '<sm-spinner class="justify-self-center margin-top-1-5"></sm-spinner>';
                     btcOperator.getAddressData(address).then(result => {
-                        getRef('address_balance').value = formatAmount(getConvertedAmount(result.balance));
+                        getRef('address_balance').value = getConvertedAmount(result.balance, true);
                         getRef('address_balance').dataset.btcAmount = result.balance;
                         getRef('address_balance').parentElement.classList.remove('hidden')
                         getRef('filter_selector').classList.remove('hidden')
@@ -1286,7 +1286,7 @@
                                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M15 4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zM3 12c0-2.61 1.67-4.83 4-5.65V4.26C3.55 5.15 1 8.27 1 12s2.55 6.85 6 7.74v-2.09c-2.33-.82-4-3.04-4-5.65z"/></svg>
                                         <div>Fee</div>
                                     </div>
-                                    <div class="amount-shown" data-btc-amount="${fee}">${formatAmount(getConvertedAmount(fee))}</div>
+                                    <div class="amount-shown" data-btc-amount="${fee}">${getConvertedAmount(fee, true)}</div>
                                 </div>
                             </div>
                             <details class="margin-bottom-1-5 justify-self-center w-100">
@@ -1300,14 +1300,14 @@
                                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>
                                             <div>Total Inputs</div>
                                         </div>
-                                        <div class="amount-shown" data-btc-amount="${total_input_value}">${formatAmount(getConvertedAmount(total_input_value))}</div>
+                                        <div class="amount-shown" data-btc-amount="${total_input_value}">${getConvertedAmount(total_input_value, true)}</div>
                                     </div>
                                     <div class="tx-detail">
                                         <div class="flex align-center gap-0-3">
                                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
                                             <div>Total Outputs</div>
                                         </div>
-                                        <div class="amount-shown" data-btc-amount="${total_output_value}">${formatAmount(getConvertedAmount(total_output_value))}</div>
+                                        <div class="amount-shown" data-btc-amount="${total_output_value}">${getConvertedAmount(total_output_value, true)}</div>
                                     </div>
                                     <div class="tx-detail">
                                         <div class="flex align-center gap-0-3">
@@ -1328,7 +1328,7 @@
                                         ${inputs.map(input => html`
                                             <li class="in-out-card">
                                                 <a href="${`#/check_details?query=${input.address}`}" class="input-address wrap-around">${input.address}</a>
-                                                <div class="input-value amount-shown" data-btc-amount="${input.value}">${formatAmount(getConvertedAmount(input.value))}</div>
+                                                <div class="input-value amount-shown" data-btc-amount="${input.value}">${getConvertedAmount(input.value, true)}</div>
                                             </li>
                                         `)}
                                     </ul>
@@ -1342,7 +1342,7 @@
                                         ${outputs.map(output => html`
                                             <li class="in-out-card">
                                                 <a href="${`#/check_details?query=${output.address}`}" class="output-address wrap-around">${output.address}</a>
-                                                <div class="output-value amount-shown" data-btc-amount="${output.value}">${formatAmount(getConvertedAmount(output.value))}</div>
+                                                <div class="output-value amount-shown" data-btc-amount="${output.value}">${getConvertedAmount(output.value, true)}</div>
                                             </li>
                                         `)}
                                     </ul>
@@ -1389,7 +1389,7 @@
             }
             if (!amount)
                 return '0';
-            return amount.toLocaleString(undefined, { style: 'currency', currency: selectedCurrency, minimumFractionDigits: 0, maximumFractionDigits: 8 })
+            return amount.toLocaleString(undefined, { style: 'currency', currency: selectedCurrency, minimumFractionDigits: 0, maximumFractionDigits: selectedCurrency === 'btc' ? 8 : 2 })
         }
         let globalExchangeRate = {}
         async function getExchangeRate() {
@@ -1405,14 +1405,17 @@
                 }).catch(err => reject(err))
             })
         }
-        function getConvertedAmount(amount) {
+        function getConvertedAmount(amount, formatAmount = false) {
             // check if amount is a string and convert it to a number
             if (typeof amount === 'string') {
                 amount = parseFloat(amount)
             }
+            let convertedAmount = amount;
             if (globalExchangeRate[selectedCurrency])
-                return parseFloat((amount * globalExchangeRate[selectedCurrency]).toFixed(8))
-            else return amount
+                convertedAmount = parseFloat((amount * globalExchangeRate[selectedCurrency]).toFixed(8))
+            if (formatAmount)
+                convertedAmount = formatAmount(convertedAmount)
+            return convertedAmount
         }
         function roundUp(amount, precision = 2) {
             return parseFloat((Math.ceil(amount * Math.pow(10, precision)) / Math.pow(10, precision)).toFixed(precision))
@@ -1448,7 +1451,7 @@
                     el.isValid // trigger validation
                 } else {
                     if (el.dataset.btcAmount === undefined) return
-                    el.textContent = formatAmount(getConvertedAmount(el.dataset.btcAmount))
+                    el.textContent = getConvertedAmount(el.dataset.btcAmount, true)
                 }
             })
             previouslySelectedCurrency = selectedCurrency
@@ -1714,12 +1717,12 @@
             senderBalances.forEach(el => el.innerHTML = '<sm-spinner></sm-spinner>');
             Promise.all(addresses.map((addr, index) => btcOperator.getBalance(addr))).then(balances => {
                 balances.forEach((balance, index) => {
-                    senderBalances[index].textContent = formatAmount(getConvertedAmount(balance));
+                    senderBalances[index].textContent = getConvertedAmount(balance, true);
                     senderBalances[index].dataset.btcAmount = balance;
                     totalBalance += balance;
                 })
                 console.log(totalBalance)
-                getRef("total_balance").textContent = `${formatAmount(getConvertedAmount(totalBalance))}`;
+                getRef("total_balance").textContent = `${getConvertedAmount(totalBalance, true)}`;
                 getRef("total_balance").dataset.btcAmount = totalBalance;
             }).catch(err => {
                 console.error(err);
@@ -1768,7 +1771,7 @@
                             renderElem(getRef('fees_wrapper'), html`
                             <div class="grid gap-0-3">
                                 <div>
-                                    Approximate fee: <b id="recommended_fee" class="amount-shown" data-btc-amount=${fees}>${formatAmount(getConvertedAmount(fees))}</b>
+                                    Approximate fee: <b id="recommended_fee" class="amount-shown" data-btc-amount=${fees}>${getConvertedAmount(fees, true)}</b>
                                 </div>
                                 <p style="opacity: 0.8;">*Exact fee will be calculated after you fill all the required fields</p>
                             </div>
@@ -1817,7 +1820,7 @@
                 renderElem(getRef('fees_wrapper'), html`<sm-spinner></sm-spinner>`)
                 const [senders, privKeys, receivers, amounts] = getTransactionInputs();
                 btcOperator.createTx(senders, receivers, amounts).then(({ fee }) => {
-                    renderElem(getRef('fees_wrapper'), html` <b id="recommended_fee" class="amount-shown" data-btc-amount=${fee}>${formatAmount(getConvertedAmount(fee))}</b> `)
+                    renderElem(getRef('fees_wrapper'), html` <b id="recommended_fee" class="amount-shown" data-btc-amount=${fee}>${getConvertedAmount(fee, true)}</b> `)
                     getRef('send_transaction').disabled = false;
                     getRef('fees_section').classList.remove('hidden')
                     getRef('error_section').classList.add('hidden')
@@ -1852,7 +1855,7 @@
             } else {
                 getRef('fees_section').classList.remove('hidden')
                 getRef('error_section').classList.add('hidden')
-                if (getRef('send_tx').validity)
+                if (getRef('send_tx').isFormValid)
                     getRef('send_transaction').disabled = false;
             }
         }, 300))
@@ -1909,14 +1912,14 @@
                             <h5>Receivers</h5>
                             <ul class="flex flex-direction-column gap-0-5">
                                 ${receivers.map((receiver, index) => html`<li class="wrap-around flex flex-direction-column gap-0-5" style="padding:0.5rem;border:solid thin rgba(var(--text-color),0.3);border-radius: 0.3rem;">
-                                    ${receiver} <span class="amount-shown">${formatAmount(getConvertedAmount(amounts[index]))}</span>
+                                    ${receiver} <span class="amount-shown">${getConvertedAmount(amounts[index], true)}</span>
                                 </li>`)}
                             </ul>
                         </div>
                         <div class="grid gap-0-5">
                             <h5>Fee</h5>
                             <div class="flex wrap-around gap-0-5">
-                                <span class="amount-shown">${formatAmount(getConvertedAmount(fee))}</span>
+                                <span class="amount-shown">${getConvertedAmount(fee, true)}</span>
                             </div>
                         </div>
                     </div>`,
@@ -2028,7 +2031,7 @@
                         <div class="grid gap-0-5">
                             <h4>Senders</h4>
                             <ul class="grid gap-0-5">
-                                ${[...new Set(senders)].map((address) => html.node`<li class="increase-fee-sender grid gap-1">
+                                ${[...new Set(senders)].map((address) => html.node/*html*/`<li class="increase-fee-sender grid gap-1">
                                     <div>
                                         <div class="label">Address</div>
                                         <b class="sender__address wrap-around">${address}</b>
@@ -2047,23 +2050,23 @@
                         <div class="grid gap-0-5">
                             <h4>Receivers</h4>
                             <ul class="grid gap-0-5">
-                                ${Object.entries(uniqueReceivers).map(([address, value]) => html.node`<li class="increase-fee-receiver grid gap-1">
+                                ${Object.entries(uniqueReceivers).map(([address, value]) => html.node/*html*/`<li class="increase-fee-receiver grid gap-1">
                                     <div>
                                         <div class="label">Address</div>
                                         <b class="wrap-around">${address}</b>
                                     </div>
                                     <div>
                                         <div class="label">Amount</div>
-                                        <b>${formatAmount(getConvertedAmount(value))}</b>
+                                        <b>${getConvertedAmount(value, true)}</b>
                                     </div>
                                 </li>`)}
                             </ul>
                         </div>
                         <div class="grid gap-0-5">
                             <p>
-                                Previous fee: <b>${formatAmount(getConvertedAmount(previousFee))}</b> ${recommendedFee ? html`| Recommended fee: <b>${formatAmount(getConvertedAmount(recommendedFee))}</b>` : ''}
+                                Previous fee: <b>${getConvertedAmount(previousFee, true)}</b> ${recommendedFee ? html`| Recommended fee: <b>${getConvertedAmount(recommendedFee, true)}</b>` : ''}
                             </p>
-                            <sm-input id="new_fee" placeholder="New fee" type="number" min=${getConvertedAmount(previousFee)} step="0.00000001" error-text=${`New fee should be greater than ${formatAmount(getConvertedAmount(previousFee))}`} animate required>
+                            <sm-input id="new_fee" placeholder="New fee" type="number" min=${getConvertedAmount(previousFee)} step="0.00000001" error-text=${`New fee should be greater than ${getConvertedAmount(previousFee, true)}`} animate required>
                                 <div class="currency-symbol flex" slot="icon"> </div>
                             </sm-input>
                         </div>
