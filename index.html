@@ -717,9 +717,6 @@
                             getRef('search_query_input').value = params.query;
                         render.queryResult(params.query)
                     }
-                    setTimeout(() => {
-                        getRef('search_query_input').focusIn()
-                    }, 200);
                     break;
                 case 'convert':
                     renderConversionPage(params.from)
