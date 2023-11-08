@@ -1402,7 +1402,7 @@
                 }).catch(err => reject(err))
             })
         }
-        function getConvertedAmount(amount, formatAmount = false) {
+        function getConvertedAmount(amount, shouldFormatAmount = false) {
             // check if amount is a string and convert it to a number
             if (typeof amount === 'string') {
                 amount = parseFloat(amount)
@@ -1410,7 +1410,7 @@
             let convertedAmount = amount;
             if (globalExchangeRate[selectedCurrency])
                 convertedAmount = parseFloat((amount * globalExchangeRate[selectedCurrency]).toFixed(8))
-            if (formatAmount)
+            if (shouldFormatAmount)
                 convertedAmount = formatAmount(convertedAmount)
             return convertedAmount
         }
