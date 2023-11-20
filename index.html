@@ -1497,6 +1497,7 @@
             let privateKeyConversionDescription = '';
             let addressConversionDescription = null;
             let addressForConversion = ''
+            getRef('conversion_view_selector').value = convertingFrom
             switch (convertingFrom) {
                 case 'flo':
                     privateKeyConversionDescription = 'Convert FLO private key to corresponding BTC | ETH address & private key';
@@ -1637,7 +1638,7 @@
                         convertedTo = 'BTC'
                         break;
                     case 'btc':
-                        convertedAddress = floCrypto.getFloID(addressToConvert);
+                        convertedAddress = floCrypto.toFloID(addressToConvert);
                         convertedTo = 'FLO'
                         break;
                 }
