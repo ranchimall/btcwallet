@@ -1740,7 +1740,6 @@
             }
             getRef("total_balance").innerHTML = '<sm-spinner></sm-spinner>';
             let totalBalance = 0;
-            console.debug(addresses);
             let senderBalances = [...getRef('sender_container').querySelectorAll('.sender-balance')];
             senderBalances.forEach(el => el.innerHTML = '<sm-spinner></sm-spinner>');
             Promise.all(addresses.map((addr, index) => btcOperator.getBalance(addr))).then(balances => {
@@ -1749,7 +1748,6 @@
                     senderBalances[index].dataset.btcAmount = balance;
                     totalBalance += balance;
                 })
-                console.log(totalBalance)
                 getRef("total_balance").textContent = `${getConvertedAmount(totalBalance, true)}`;
                 getRef("total_balance").dataset.btcAmount = totalBalance;
             }).catch(err => {
@@ -1822,7 +1820,6 @@
             const amounts = [...getRef('receiver_container').querySelectorAll('.amount-input')].map(input => {
                 return parseFloat(input.value.trim()) / (globalExchangeRate[selectedCurrency] || 1)
             });
-            console.debug(senders, receivers, amounts); //for automatic fee calc, set fee = null
             return [senders, privKeys, receivers, amounts]
         }
         function calculateApproxFee() {
@@ -1926,7 +1923,6 @@
                 }
                 fee = parseFloat((parseFloat(feeInput) / (globalExchangeRate[selectedCurrency] || 1)).toFixed(8));
             }
-            console.log(senders, receivers, amounts, fee);
             const confirmation = await getConfirmation('Confirm Transaction', {
                 message: html`
                     <div class="grid gap-1-5">
@@ -2031,7 +2027,6 @@
                     const details = btcOperator.deserializeTx(await btcOperator.getTx.hex(txid))
                     senders = btcOperator.extractLastHexStrings(details.witness).flatMap((hex) => {
                         const { address, required: requiredSignatures, pubKeys } = btcOperator.decodeRedeemScript(hex) || {}
-                        console.log(btcOperator.decodeRedeemScript(hex))
                         return pubKeys.map(pubKey => btcOperator.bech32Address(pubKey))
                     })
                 } else {
@@ -2123,7 +2118,6 @@
                     privateKeys.push(privateKey)
                 }
             })
-            console.log(changingFeeOf, newFee, privateKeys)
             try {
                 let signedTxHex
                 if (isMultisig) {
