@@ -1,4 +1,4 @@
-(function (EXPORTS) { //btcOperator v1.1.3d
+(function (EXPORTS) { //btcOperator v1.1.4
     /* BTC Crypto and API Operator */
     const btcOperator = EXPORTS;
 
@@ -400,12 +400,12 @@
     }
     btcOperator.validateTxParameters = validateTxParameters;
 
-    function createTransaction(senders, redeemScripts, receivers, amounts, fee, change_address, fee_from_receiver) {
+    function createTransaction(senders, redeemScripts, receivers, amounts, fee, change_address, fee_from_receiver, allowUnconfirmedUtxos = false) {
         return new Promise((resolve, reject) => {
             let total_amount = parseFloat(amounts.reduce((t, a) => t + a, 0).toFixed(8));
             const tx = coinjs.transaction();
             let output_size = addOutputs(tx, receivers, amounts, change_address);
-            addInputs(tx, senders, redeemScripts, total_amount, fee, output_size, fee_from_receiver).then(result => {
+            addInputs(tx, senders, redeemScripts, total_amount, fee, output_size, fee_from_receiver, allowUnconfirmedUtxos).then(result => {
                 if (result.change_amount > 0 && result.change_amount > result.fee) //add change amount if any (ignore dust change)
                     tx.outs[tx.outs.length - 1].value = util.BTC_to_Sat(result.change_amount); //values are in satoshi
                 if (fee_from_receiver) { //deduce fee from receivers if fee_from_receiver
@@ -439,10 +439,10 @@
     }
     btcOperator.createTransaction = createTransaction;
 
-    function addInputs(tx, senders, redeemScripts, total_amount, fee, output_size, fee_from_receiver) {
+    function addInputs(tx, senders, redeemScripts, total_amount, fee, output_size, fee_from_receiver, allowUnconfirmedUtxos = false) {
         return new Promise((resolve, reject) => {
             if (fee !== null) {
-                addUTXOs(tx, senders, redeemScripts, fee_from_receiver ? total_amount : total_amount + fee, false).then(result => {
+                addUTXOs(tx, senders, redeemScripts, fee_from_receiver ? total_amount : total_amount + fee, false, { allowUnconfirmedUtxos }).then(result => {
                     result.fee = fee;
                     resolve(result);
                 }).catch(error => reject(error))
@@ -451,8 +451,8 @@
                     let net_fee = BASE_TX_SIZE * fee_rate;
                     net_fee += (output_size * fee_rate);
                     (fee_from_receiver ?
-                        addUTXOs(tx, senders, redeemScripts, total_amount, false) :
-                        addUTXOs(tx, senders, redeemScripts, total_amount + net_fee, fee_rate)
+                        addUTXOs(tx, senders, redeemScripts, total_amount, false, { allowUnconfirmedUtxos }) :
+                        addUTXOs(tx, senders, redeemScripts, total_amount + net_fee, fee_rate, { allowUnconfirmedUtxos })
                     ).then(result => {
                         result.fee = parseFloat((net_fee + (result.input_size * fee_rate)).toFixed(8));
                         result.fee_rate = fee_rate;
@@ -464,7 +464,7 @@
     }
     btcOperator.addInputs = addInputs;
 
-    function addUTXOs(tx, senders, redeemScripts, required_amount, fee_rate, rec_args = {}) {
+    function addUTXOs(tx, senders, redeemScripts, required_amount, fee_rate, rec_args = { allowUnconfirmedUtxos: false }) {
         return new Promise((resolve, reject) => {
             required_amount = parseFloat(required_amount.toFixed(8));
             if (typeof rec_args.n === "undefined") {
@@ -478,8 +478,9 @@
                     input_amount: rec_args.input_amount,
                     change_amount: required_amount * -1 //required_amount will be -ve of change_amount
                 });
-            else if (rec_args.n >= senders.length)
+            else if (rec_args.n >= senders.length) {
                 return reject("Insufficient Balance");
+            }
             let addr = senders[rec_args.n],
                 rs = redeemScripts[rec_args.n];
             let addr_type = coinjs.addressDecode(addr).type;
@@ -488,7 +489,9 @@
                 let utxos = result.unspent_outputs;
                 //console.debug("add-utxo", addr, rs, required_amount, utxos);
                 for (let i = 0; i < utxos.length && required_amount > 0; i++) {
-                    if (!utxos[i].confirmations) //ignore unconfirmed utxo
+                    if (utxos.length === 1 && rec_args.allowUnconfirmedUtxos) {
+                        console.log('allowing unconfirmed utxos')
+                    } else if (!utxos[i].confirmations) //ignore unconfirmed utxo
                         continue;
                     var script;
                     if (!rs || !rs.length) //legacy script
@@ -838,7 +841,9 @@
         })
     }
 
-    btcOperator.createTx = function (senders, receivers, amounts, fee = null, options = {}) {
+    btcOperator.createTx = function (senders, receivers, amounts, fee = null, options = {
+        allowUnconfirmedUtxos: false
+    }) {
         return new Promise((resolve, reject) => {
             try {
                 ({
@@ -859,7 +864,7 @@
             if (redeemScripts.includes(null)) //TODO: segwit
                 return reject("Unable to get redeem-script");
             //create transaction
-            createTransaction(senders, redeemScripts, receivers, amounts, fee, options.change_address || senders[0], options.fee_from_receiver).then(result => {
+            createTransaction(senders, redeemScripts, receivers, amounts, fee, options.change_address || senders[0], options.fee_from_receiver, options.allowUnconfirmedUtxos).then(result => {
                 result.tx_hex = result.transaction.serialize();
                 delete result.transaction;
                 resolve(result);

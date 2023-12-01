@@ -957,13 +957,16 @@
 
         function buttonLoader(id, show) {
             const button = typeof id === 'string' ? document.getElementById(id) : id;
-            button.disabled = show;
+            if (!button) return
+            if (!button.dataset.hasOwnProperty('wasDisabled'))
+                button.dataset.wasDisabled = button.disabled
             const animOptions = {
                 duration: 200,
-                fill: 'both',
+                fill: 'forwards',
                 easing: 'ease'
             }
             if (show) {
+                button.disabled = true
                 button.parentNode.append(document.createElement('sm-spinner'))
                 button.animate([
                     {
@@ -974,11 +977,22 @@
                     },
                 ], animOptions)
             } else {
-                button.getAnimations().forEach(anim => anim.cancel())
+                button.disabled = button.dataset.wasDisabled === 'true';
+                button.animate([
+                    {
+                        clipPath: 'circle(0)',
+                    },
+                    {
+                        clipPath: 'circle(100%)',
+                    },
+                ], animOptions).onfinish = (e) => {
+                    button.removeAttribute('data-original-state')
+                }
                 const potentialTarget = button.parentNode.querySelector('sm-spinner')
                 if (potentialTarget) potentialTarget.remove();
             }
         }
+
         let isMobileView = false
         const mobileQuery = window.matchMedia('(max-width: 40rem)')
         function handleMobileChange(e) {
@@ -1166,7 +1180,7 @@
                 const queriedAddress = pagesData.params?.query || getRef('search_query_input').value.trim()
                 const isSender = type === 'out' || type === 'self'
                 const className = `transaction grid ${type} ${block === null ? 'unconfirmed-tx' : ''}`
-                return html.node`
+                return html.node/*html*/`
                     <li class="${className}" data-txid="${txid}" data-transacting-addresses=${transactingAddresses.slice(2)}>
                         <div class="transaction__icon">${icon}</div>
                         <div class="grid gap-0-5">
@@ -1185,7 +1199,7 @@
                                 </a>
                                 ${isSender && !block ? html`
                                     <div class="multi-state-button">
-                                        <button class="button button--small gap-0-3" onclick=${initFeeChange} title="Resend transaction with greater fees to reduce confirmation time">
+                                        <button class="button button--small gap-0-3" onclick=${(e) => initFeeChange(e, txid)} title="Resend transaction with greater fees to reduce confirmation time">
                                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
                                             Increase fee
                                         </button>
@@ -1261,6 +1275,22 @@
                                     Unconfirmed
                                 </h4> ` : ''}
                             </div>
+                            ${!block ? html`
+                                <div class="flex flex-direction-column gap-0-5" style="padding: 1rem;border-radius:0.5rem; border: solid thin rgba(var(--text-color),0.3); background-color: rgba(var(--text-color),0.02)">
+                                    <h3>
+                                        Taking too long to confirm?
+                                    </h3>
+                                    <p>
+                                        You can increase the fee to speed up confirmation.
+                                    </p>
+                                    <div class="multi-state-button margin-right-auto">
+                                        <button class="button gap-0-3 button--primary" onclick=${e => initFeeChange(e, txid)} title="Resend transaction with greater fees to reduce confirmation time">
+                                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
+                                            Increase fee
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
                             <div id="tx_technicals" class="justify-self-center details-wrapper">
                                 <div class="tx-detail">
                                     <div class="flex align-center gap-0-3">
@@ -1988,10 +2018,9 @@
         }
 
         let changingFeeOf = null
-        async function initFeeChange(e) {
+        async function initFeeChange(e, txid) {
             const button = e.target.closest('button')
             buttonLoader(button, true)
-            const txid = button.closest('li').dataset.txid
             changingFeeOf = txid
             try {
                 const { inputs, outputs, fee: previousFee } = await btcOperator.getTx(txid)
@@ -2020,7 +2049,7 @@
                 const amounts = outputs.map(output => 0.00000005)
                 let recommendedFee = null
                 if (!isMultisig) {
-                    const { fee } = await btcOperator.createTx(senders, receivers, amounts)
+                    const { fee } = await btcOperator.createTx(senders, receivers, amounts, null, { allowUnconfirmedUtxos: true })
                     if (fee > previousFee)
                         recommendedFee = fee
                 }
@@ -2076,7 +2105,7 @@
                 document.getElementById('new_fee').querySelector('.currency-symbol').innerHTML = currencyIcons[selectedCurrency]
                 openPopup('increase_fee_popup')
             } catch (e) {
-                console.error(e)
+                notify(e, 'error')
             } finally {
                 buttonLoader(button, false)
             }
