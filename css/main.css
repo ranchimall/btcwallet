@@ -1274,10 +1274,6 @@ ol li::before {
     filter: contrast(2);
   }
 }
-.xls {
-  display: flex;
-}
-
 @supports (overflow: overlay) {
   body {
     overflow: overlay;
