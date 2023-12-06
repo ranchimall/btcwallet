@@ -1186,7 +1186,9 @@ ol {
     }
   }
 }
-
+.xls {
+  display: flex;
+}
 @supports (overflow: overlay) {
   body {
     overflow: overlay;
