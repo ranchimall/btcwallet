@@ -13,4 +13,4 @@ jobs:
           branch: master
           force: true
           directory: .
-          repository: ranchimall/dappbundle.git
+          repository: ranchimall/dappbundle
