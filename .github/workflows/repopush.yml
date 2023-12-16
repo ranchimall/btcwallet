@@ -3,7 +3,7 @@ name: push this repo to bundle repo
 on: [push]
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: push to bundle repo
