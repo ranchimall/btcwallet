@@ -1,9 +1,6 @@
 # push contents of this repo to specified repo on github on commit
 name: push this repo to bundle repo
-on:
-  push:
-    branches:
-      - master
+on: [push]
 jobs:
   build:
     runs-on: self-hosted
