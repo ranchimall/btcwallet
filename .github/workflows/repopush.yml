@@ -14,4 +14,3 @@ jobs:
           force: true
           directory: .
           repository: https://github.com/ranchimall/dappbundle.git
-          target-directory: btcwallet
