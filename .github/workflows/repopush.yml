@@ -1,6 +1,8 @@
 # push contents of this repo to specified repo on github on commit
 name: push this repo to bundle repo
 on: [push]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
