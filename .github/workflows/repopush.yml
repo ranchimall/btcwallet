@@ -28,6 +28,7 @@ jobs:
           fi
 
           cd "/home/production/deployed/dappbundle/${{ github.event.repository.name }}" && rm -r .gitattributes
-          cd "/home/production/deployed/dappbundle/ && git push origin main
+          cd "/home/production/deployed/dappbundle/ && git push "https://ranchimalldev:${{ secrets.RM_ACCESS_TOKEN }}@github.com/ranchimall/dappbundle.git"
+
 
           
