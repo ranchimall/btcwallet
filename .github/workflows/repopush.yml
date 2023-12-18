@@ -11,7 +11,7 @@ jobs:
       - name: push to bundle repo
         uses: ad-m/github-push-action@master
         with:
-          repo-token:: ${{ secrets.SM_ACCESS_TOKEN }}
+          github_token: ${{ secrets.SM_ACCESS_TOKEN }}
           branch: master
           force: true
           directory: .
