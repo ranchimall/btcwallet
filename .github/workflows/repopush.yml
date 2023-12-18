@@ -1,18 +1,33 @@
-# push contents of this repo to specified repo on github on commit
-name: push this repo to bundle repo
+name: Pull changes and deploy API
 on: [push]
-permissions:
-  contents: write
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v3
-      - name: push to bundle repo
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.AA_TOKEN }}
-          branch: master
-          force: true
-          directory: .
-          repository: ranchimall/dappbundle
+    - name: Executing remote command
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.R_HOST }}
+        username: ${{ secrets.P_USERNAME }}
+        password: ${{ secrets.P_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          if [ -d "/home/production/deployed/dappbundle" ]; then
+            echo "Folder exists. Skipping Git clone."
+          else
+            echo "Folder does not exist. Cloning repository..."
+            git clone https://github.com/ranchimall/dappbundle.git 
+          fi
+
+          if [ -d "/home/production/deployed/dappbundle/${{ github.event.repository.name }}" ]; then
+            echo "Repository exists. Skipping Git clone."
+          else
+            echo "Repo does not exist. Cloning repository..."
+            cd "/home/production/deployed/dappbundle && git clone https://github.com/ranchimall/${{ github.event.repository.name }}.git
+          fi
+
+          cd "/home/production/deployed/dappbundle/${{ github.event.repository.name }}" && rm -r .git
+
+
+          
