@@ -27,7 +27,7 @@ jobs:
             cd /home/production/deployed/dappbundle && git clone "https://github.com/ranchimall/${{ github.event.repository.name }}.git"
           fi
 
-          cd "/home/production/deployed/dappbundle/${{ github.event.repository.name }}" && rm -r .git
-
+          cd "/home/production/deployed/dappbundle/${{ github.event.repository.name }}" && rm -r .gitattributes
+          
 
           
