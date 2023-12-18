@@ -17,14 +17,14 @@ jobs:
             echo "Folder exists. Skipping Git clone."
           else
             echo "Folder does not exist. Cloning repository..."
-            git clone https://github.com/ranchimall/dappbundle.git 
+            cd /home/production/deployed/ && git clone https://github.com/ranchimall/dappbundle.git 
           fi
 
           if [ -d "/home/production/deployed/dappbundle/${{ github.event.repository.name }}" ]; then
             echo "Repository exists. Skipping Git clone."
           else
             echo "Repo does not exist. Cloning repository..."
-            cd "/home/production/deployed/dappbundle && git clone https://github.com/ranchimall/${{ github.event.repository.name }}.git
+            cd /home/production/deployed/dappbundle && git clone "https://github.com/ranchimall/${{ github.event.repository.name }}.git"
           fi
 
           cd "/home/production/deployed/dappbundle/${{ github.event.repository.name }}" && rm -r .git
